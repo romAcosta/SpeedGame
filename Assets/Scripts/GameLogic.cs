@@ -1,5 +1,6 @@
 
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 
 
@@ -12,8 +13,12 @@ public class GameLogic : MonoBehaviour
         (1, "H"), (2, "H"), (3, "H"), (4, "H"), (5, "H"), (6, "H"), (7, "H"), (8, "H"), (9, "H"), (10, "H"), (11, "H"), (12, "H"), (13, "H"),
         (1, "S"), (2, "S"), (3, "S"), (4, "S"), (5, "S"), (6, "S"), (7, "S"), (8, "S"), (9, "S"), (10, "S"), (11, "S"), (12, "S"), (13, "S")
     };
-
+    
+    [SerializeField] TMP_Text countdownText;
+    
+    private Stack<(int Rank, string Suit)> _leftMiddleDeck = new Stack<(int Rank, string Suit)>();
     private Stack<(int Rank, string Suit)> _leftMiddleStack = new Stack<(int Rank, string Suit)>();
+    private Stack<(int Rank, string Suit)> _rightMiddleDeck = new Stack<(int Rank, string Suit)>();
     private Stack<(int Rank, string Suit)> _rightMiddleStack = new Stack<(int Rank, string Suit)>();
     private Stack<(int Rank, string Suit)> _playerStack = new Stack<(int Rank, string Suit)>();
     private Stack<(int Rank, string Suit)> _opponentStack = new Stack<(int Rank, string Suit)>();
@@ -21,7 +26,7 @@ public class GameLogic : MonoBehaviour
     private (int Rank, string Suit)[] _opponentHand = new (int Rank, string Suit)[5];
 
     private bool go = true;
-    
+    private float timer = 3f;
     void Start()
     {
         Shuffle(_deck);
@@ -36,14 +41,29 @@ public class GameLogic : MonoBehaviour
         DrawCards();
         if (go)
         {
-            Debug.Log(_playerHand[0]);
-            Debug.Log(_playerHand[1]);
-            Debug.Log(_playerHand[2]);
-            Debug.Log(_playerHand[3]);
-            Debug.Log(_playerHand[4]);
-            go = false;
+            PlayMiddleCards();
         }
     }
+
+
+    void PlayMiddleCards()
+    {
+        timer -= Time.fixedDeltaTime;
+        if (timer <= 0)
+        {
+            _leftMiddleStack.Push(_leftMiddleDeck.Pop());
+            _rightMiddleStack.Push(_rightMiddleDeck.Pop());
+            timer = 3f;
+            countdownText.enabled = false;
+            go = false;
+        }
+        else
+        {
+            countdownText.enabled = true;
+            countdownText.text = timer.ToString("0");
+        }
+    }
+    
     
     void Shuffle(List<(int Rank, string Suit)> list)
     {
@@ -64,13 +84,13 @@ public class GameLogic : MonoBehaviour
         {
             if (left)
             {
-                if (i < 10) _leftMiddleStack.Push((_deck[i]));
+                if (i < 10) _leftMiddleDeck.Push((_deck[i]));
                 else _playerStack.Push(_deck[i]);
                 left = false;
             }
             else
             {
-                if (i < 10) _rightMiddleStack.Push(_deck[i]);
+                if (i < 10) _rightMiddleDeck.Push(_deck[i]);
                 else _opponentStack.Push(_deck[i]);
                 left = true;
             }
@@ -94,8 +114,10 @@ public class GameLogic : MonoBehaviour
 
     #region Getters
 
-    public Stack<(int Rank, string Suit)> LeftMiddleStack => _leftMiddleStack;
+    public Stack<(int Rank, string Suit)> LeftMiddleDeck => _leftMiddleDeck;
+    public Stack<(int Rank, string Suit)> RightMiddleDeck => _rightMiddleDeck;
     public Stack<(int Rank, string Suit)> RightMiddleStack => _rightMiddleStack;
+    public Stack<(int Rank, string Suit)> LeftMiddleStack => _leftMiddleStack;
     public Stack<(int Rank, string Suit)> PlayerStack => _playerStack;
     public Stack<(int Rank, string Suit)> OpponentStack => _opponentStack;
     public (int Rank, string Suit)[] PlayerHand => _playerHand;

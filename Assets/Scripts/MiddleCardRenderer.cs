@@ -1,9 +1,8 @@
 using UnityEngine;
 
-public class HandCardRenderer : MonoBehaviour
+public class MiddleCardRenderer : MonoBehaviour
 {
-    [SerializeField] private bool player = true;
-    [SerializeField] private int position = 1;
+    [SerializeField] private bool left = true;
     [SerializeField] private GameLogic gameLogic;
     [SerializeField] private CardTranslator translator;
     
@@ -18,11 +17,15 @@ public class HandCardRenderer : MonoBehaviour
     
     void Update()
     {
-        if (GetCard() != _lastCard)
+        if (gameLogic.LeftMiddleStack.Count !> 0)
         {
-            ChangeSprite();
+            if (GetCard() != _lastCard)
+            {
+                ChangeSprite();
+            }
         }
     }
+        
 
     void ChangeSprite()
     {
@@ -31,7 +34,7 @@ public class HandCardRenderer : MonoBehaviour
 
     (int Rank, string Suit) GetCard()
     {
-        return (player) ? gameLogic.PlayerHand[position] : gameLogic.OpponentHand[position];  
+        return (left) ? gameLogic.LeftMiddleStack.Peek() : gameLogic.RightMiddleStack.Peek();  
     }
     
     
