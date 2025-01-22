@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 0f5c22fdda0fed14cb56bafeadb9cf19
+guid: 5755ac9c1d3a65547bc1c3ddd475547d
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -9062799800482736669
-    second: Tiles_Queen_white_0
+      213: -2772436440701751246
+    second: Hearts_King_white_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -100,7 +100,7 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Tiles_Queen_white_0
+      name: Hearts_King_white_0
       rect:
         serializedVersion: 2
         x: 0
@@ -115,8 +115,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 3e5deb529977a3280800000000000000
-      internalID: -9062799800482736669
+      spriteID: 230bf950fb35689d0800000000000000
+      internalID: -2772436440701751246
       vertices: []
       indices: 
       edges: []
@@ -134,7 +134,8 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      Hearts_King_white_0: -2772436440701751246
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

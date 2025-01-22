@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 882102aa6bbee4547a01777688d26d2e
+guid: 0f77815fa6077324e8dfef4eee60dee4
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 5199854773336799899
-    second: Hearts_A_white_0
+      213: 4888415834392605112
+    second: Hearts_Queen_white_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -100,7 +100,7 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Hearts_A_white_0
+      name: Hearts_Queen_white_0
       rect:
         serializedVersion: 2
         x: 0
@@ -115,8 +115,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: b9afb58cd58992840800000000000000
-      internalID: 5199854773336799899
+      spriteID: 8b1bd5b2d4427d340800000000000000
+      internalID: 4888415834392605112
       vertices: []
       indices: 
       edges: []
@@ -134,7 +134,8 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      Hearts_Queen_white_0: 4888415834392605112
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

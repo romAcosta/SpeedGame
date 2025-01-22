@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: cba1d7ca20a666349af080f48bcb2464
+guid: 557a6294eb03d8f4c89727103bdd9c0e
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 7536895363442770931
-    second: Pikes_King_white_0
+      213: -134122144375006002
+    second: Heats_6_white_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -100,7 +100,7 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Pikes_King_white_0
+      name: Heats_6_white_0
       rect:
         serializedVersion: 2
         x: 0
@@ -115,8 +115,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 3f38b4f966e689860800000000000000
-      internalID: 7536895363442770931
+      spriteID: ecc930cce90832ef0800000000000000
+      internalID: -134122144375006002
       vertices: []
       indices: 
       edges: []
@@ -134,7 +134,8 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      Heats_6_white_0: -134122144375006002
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
