@@ -12,9 +12,10 @@ impl ServerboundPacket {
             None => return Err(io::Error::new(ErrorKind::InvalidData, "packet is empty")),
         };
 
+        use ServerboundPacket::*;
         Ok(match id {
-            0 => ServerboundPacket::JoinQueue,
-            1 => ServerboundPacket::RequestLobby,
+            0 => JoinQueue,
+            1 => RequestLobby,
             _ => return Err(io::Error::new(ErrorKind::InvalidData, "packet is invalid")),
         })
     }
@@ -26,8 +27,9 @@ pub enum ClientboundPacket {
 
 impl ClientboundPacket {
     pub fn serialize(&self) -> Vec<u8> {
+        use ClientboundPacket::*;
         match self {
-            ClientboundPacket::LobbyResponse { code } => code.bytes().collect(),
+            LobbyResponse { code } => code.bytes().collect(),
         }
     }
 }
