@@ -63,7 +63,7 @@ impl Connection {
         self.inbound_rx.recv().await
     }
 
-    pub async fn send<P: ClientboundPacket>(&self, packet: P) {
+    pub async fn send(&self, packet: ClientboundPacket) {
         let message = Message::Binary(packet.serialize().into());
         let _ = self.outbound_tx.send(message).await;
     }

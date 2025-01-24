@@ -20,19 +20,14 @@ impl ServerboundPacket {
     }
 }
 
-pub trait ClientboundPacket {
-    const ID: u8;
-    fn serialize(&self) -> Vec<u8>;
+pub enum ClientboundPacket {
+    LobbyResponse { code: String },
 }
 
-pub struct LobbyResponse {
-    pub code: String,
-}
-
-impl ClientboundPacket for LobbyResponse {
-    const ID: u8 = 1;
-
-    fn serialize(&self) -> Vec<u8> {
-        return self.code.bytes().collect();
+impl ClientboundPacket {
+    pub fn serialize(&self) -> Vec<u8> {
+        match self {
+            ClientboundPacket::LobbyResponse { code } => code.bytes().collect(),
+        }
     }
 }

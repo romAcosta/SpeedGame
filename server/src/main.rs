@@ -1,3 +1,4 @@
+mod card;
 mod connection;
 mod lobby;
 mod packets;
@@ -11,7 +12,7 @@ use std::time::Duration;
 use connection::Connection;
 use dashmap::DashMap;
 use lobby::Lobby;
-use packets::{LobbyResponse, ServerboundPacket};
+use packets::{ClientboundPacket, ServerboundPacket};
 use rand::Rng;
 use tokio::net::{TcpListener, TcpStream};
 use tokio::sync::RwLock;
@@ -92,7 +93,7 @@ impl Server {
         let mut lobby = Lobby::new();
 
         connection
-            .send(LobbyResponse {
+            .send(ClientboundPacket::LobbyResponse {
                 code: lobby_code.clone(),
             })
             .await;
