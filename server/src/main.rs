@@ -25,7 +25,7 @@ const CODE_CHARS: &[u8] =
 
 pub struct Server {
     listener: RwLock<TcpListener>,
-    open_lobbies: DashMap<String, Lobby>,
+    open_lobbies: DashMap<String, Connection>,
     opponent_to_match: RwLock<Option<Connection>>,
 }
 
@@ -90,7 +90,6 @@ impl Server {
 
     async fn handle_play_friend(self: &Arc<Self>, connection: Connection) {
         let lobby_code = self.random_code();
-        let mut lobby = Lobby::new();
 
         connection
             .send(ClientboundPacket::LobbyResponse {
@@ -98,17 +97,13 @@ impl Server {
             })
             .await;
 
-        lobby.add_player(connection);
-        self.open_lobbies.insert(lobby_code, lobby);
+        self.open_lobbies.insert(lobby_code, connection);
     }
 
     async fn handle_random_opponent(self: &Arc<Self>, connection: Connection) {
         let mut opponent = self.opponent_to_match.write().await;
         match opponent.take() {
             Some(opp) => {
-                let mut lobby = Lobby::new();
-                lobby.add_player(connection);
-                lobby.add_player(opp);
             }
             None => {
                 let _ = opponent.insert(connection);
