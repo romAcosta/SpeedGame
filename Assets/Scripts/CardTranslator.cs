@@ -17,6 +17,8 @@ public class CardTranslator : MonoBehaviour
                 return cardSprites[26 + index];
             case "D":
                 return cardSprites[39 + index];
+            case null:
+                return null;
             default:
                 return null;
         }

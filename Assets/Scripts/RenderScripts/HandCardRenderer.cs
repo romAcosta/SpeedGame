@@ -18,9 +18,24 @@ public class HandCardRenderer : MonoBehaviour
     
     void Update()
     {
+        if (gameLogic.Error == true)
+        {
+            _spriteRenderer.color = new Color32(244, 148, 148, 255);
+        }
+        else
+        {
+            _spriteRenderer.color = Color.white;
+        }
+        
+        
         if (GetCard() != _lastCard)
         {
             ChangeSprite();
+        }
+
+        if (GetCard() == (0, null))
+        {
+            _spriteRenderer.sprite = null;
         }
     }
 
