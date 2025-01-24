@@ -1,5 +1,7 @@
 use std::io::{self, ErrorKind};
 
+use crate::card::Card;
+
 pub enum ServerboundPacket {
     JoinQueue,
     RequestLobby,
@@ -23,6 +25,8 @@ impl ServerboundPacket {
 
 pub enum ClientboundPacket {
     LobbyResponse { code: String },
+    BeginGame,
+    Setup { hand: Vec<Card> },
 }
 
 impl ClientboundPacket {
@@ -30,6 +34,8 @@ impl ClientboundPacket {
         use ClientboundPacket::*;
         match self {
             LobbyResponse { code } => code.bytes().collect(),
+            BeginGame => Vec::new(),
+            Setup { hand } => hand.iter().map(|card| card.serialize()).collect(),
         }
     }
 }

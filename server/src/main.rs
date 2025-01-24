@@ -1,6 +1,6 @@
 mod card;
 mod connection;
-mod lobby;
+mod game;
 mod packets;
 mod protocol;
 
@@ -11,7 +11,7 @@ use std::time::Duration;
 
 use connection::Connection;
 use dashmap::DashMap;
-use lobby::Lobby;
+use game::Game;
 use packets::{ClientboundPacket, ServerboundPacket};
 use rand::Rng;
 use tokio::net::{TcpListener, TcpStream};
@@ -104,6 +104,8 @@ impl Server {
         let mut opponent = self.opponent_to_match.write().await;
         match opponent.take() {
             Some(opp) => {
+                let game = Game::new(connection, opp);
+                tokio::spawn(async move { game.start().await });
             }
             None => {
                 let _ = opponent.insert(connection);
