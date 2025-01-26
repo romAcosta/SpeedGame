@@ -67,18 +67,18 @@ impl Server {
         stream: TcpStream,
         addr: SocketAddr,
     ) -> Result<(), WsError> {
-        let mut connection = Connection::new(stream, addr).await?;
+        let mut connection = Connection::new(stream).await?;
 
         let packet = tokio::time::timeout(HANDSHAKE_TIMEOUT, connection.next())
             .await
             .map_err(|e| WsError::Io(e.into()))?;
 
         match packet {
-            Some((_, ServerboundPacket::RequestLobby)) => {
+            Some(ServerboundPacket::RequestLobby) => {
                 debug!(addr = ?addr, "Client requested lobby creation");
                 self.handle_play_friend(connection).await
             }
-            Some((_, ServerboundPacket::JoinQueue)) => {
+            Some(ServerboundPacket::JoinQueue) => {
                 debug!(addr = ?addr, "Client joined matchmaking queue");
                 self.handle_random_opponent(connection).await
             }

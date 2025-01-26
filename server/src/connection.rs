@@ -1,5 +1,4 @@
 use std::io::{self, ErrorKind};
-use std::net::SocketAddr;
 use tracing::{debug, error};
 
 use futures::stream::{SplitSink, SplitStream};
@@ -16,16 +15,16 @@ type WsError = tokio_tungstenite::tungstenite::Error;
 
 pub struct Connection {
     outbound_tx: mpsc::Sender<Message>,
-    inbound_rx: mpsc::Receiver<(SocketAddr, ServerboundPacket)>,
+    inbound_rx: Mutex<mpsc::Receiver<ServerboundPacket>>,
 }
 
 impl Connection {
-    pub async fn new(stream: TcpStream, address: SocketAddr) -> Result<Connection, WsError> {
+    pub async fn new(stream: TcpStream) -> Result<Connection, WsError> {
         let (write, read) = tokio_tungstenite::accept_async(stream).await?.split();
         let (outbound_tx, outbound_rx) = mpsc::channel(16);
         let (inbound_tx, inbound_rx) = mpsc::channel(16);
 
-        tokio::spawn(Self::read_loop(read, address, inbound_tx));
+        tokio::spawn(Self::read_loop(read, inbound_tx));
         tokio::spawn(Self::write_loop(write, outbound_rx));
 
         Ok(Connection {
@@ -36,22 +35,16 @@ impl Connection {
 
     pub async fn read_loop(
         mut read: SplitStream<Socket>,
-        address: SocketAddr,
-        inbound_tx: mpsc::Sender<(SocketAddr, ServerboundPacket)>,
+        inbound_tx: mpsc::Sender<ServerboundPacket>,
     ) -> Result<(), tokio_tungstenite::tungstenite::Error> {
-        debug!(?address, "Starting websocket read loop");
-
         while let Some(Ok(msg)) = read.next().await {
             let packet = Self::parse_packet(msg).await?;
-            debug!(?address, ?packet, "Received packet");
 
-            if let Err(_) = inbound_tx.send((address, packet)).await {
-                error!(?address, "Failed to forward packet to game logic");
+            if let Err(_) = inbound_tx.send(packet).await {
                 break;
             }
         }
 
-        debug!(?address, "Websocket read loop ended");
         Ok(())
     }
 
@@ -66,8 +59,8 @@ impl Connection {
         Ok(())
     }
 
-    pub async fn next(&mut self) -> Option<(SocketAddr, ServerboundPacket)> {
-        self.inbound_rx.recv().await
+    pub async fn next(&self) -> Option<ServerboundPacket> {
+        self.inbound_rx.lock().await.recv().await
     }
 
     pub async fn send(&self, packet: ClientboundPacket) {
