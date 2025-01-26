@@ -24,12 +24,23 @@ impl ServerboundPacket {
     }
 }
 
+#[derive(Clone, Copy, Debug)]
+#[repr(u8)]
+pub enum InactivityLevel {
+    Highlight,
+    ForcePlay,
+}
+
 #[derive(Clone, Debug)]
 pub enum ClientboundPacket {
     LobbyResponse { code: String },
     BeginGame,
     Setup { hand: Vec<Card> },
     FlipCenter { a: Card, b: Card },
+    PlayCard { card: Card, action_id: u8 },
+    RejectCard { action_id: u8 },
+    Inactivity { level: InactivityLevel },
+    DrawCard,
 }
 
 impl ClientboundPacket {
@@ -40,6 +51,10 @@ impl ClientboundPacket {
             BeginGame => 1,
             Setup { .. } => 2,
             FlipCenter { .. } => 3,
+            PlayCard { .. } => 4,
+            RejectCard { .. } => 5,
+            Inactivity { .. } => 6,
+            DrawCard => 7,
         }
     }
 
@@ -52,6 +67,12 @@ impl ClientboundPacket {
             BeginGame => {}
             Setup { hand } => result.extend(hand.iter().map(|card| card.serialize())),
             FlipCenter { a, b } => result.extend_from_slice(&[a.serialize(), b.serialize()]),
+            PlayCard { card, action_id } => {
+                result.extend_from_slice(&[card.serialize(), *action_id])
+            }
+            RejectCard { action_id } => result.push(*action_id),
+            Inactivity { level } => result.push(*level as u8),
+            DrawCard => {}
         }
 
         result
