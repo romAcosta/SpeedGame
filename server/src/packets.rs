@@ -23,10 +23,12 @@ impl ServerboundPacket {
     }
 }
 
+#[derive(Clone)]
 pub enum ClientboundPacket {
     LobbyResponse { code: String },
     BeginGame,
     Setup { hand: Vec<Card> },
+    FlipCenter { a: Card, b: Card },
 }
 
 impl ClientboundPacket {
@@ -36,6 +38,7 @@ impl ClientboundPacket {
             LobbyResponse { .. } => 0,
             BeginGame => 1,
             Setup { .. } => 2,
+            FlipCenter { .. } => 3,
         }
     }
 
@@ -47,6 +50,7 @@ impl ClientboundPacket {
             LobbyResponse { code } => result.extend(code.bytes()),
             BeginGame => {}
             Setup { hand } => result.extend(hand.iter().map(|card| card.serialize())),
+            FlipCenter { a, b } => result.extend_from_slice(&[a.serialize(), b.serialize()]),
         }
 
         result

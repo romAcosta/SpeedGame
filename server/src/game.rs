@@ -1,5 +1,6 @@
 use rand::seq::SliceRandom;
 use std::sync::Arc;
+use tokio::sync::RwLock;
 
 use crate::card::{Card, Suit};
 use crate::connection::Connection;
@@ -9,25 +10,35 @@ const HAND_SIZE: usize = 5;
 
 pub struct Game {
     pub players: Vec<Connection>,
+    pub deck: RwLock<Vec<Card>>,
 }
 
 impl Game {
     pub fn new(player_a: Connection, player_b: Connection) -> Arc<Game> {
+        let deck = Self::shuffled_deck();
+
         Arc::new(Game {
             players: vec![player_a, player_b],
+            deck: RwLock::new(deck),
         })
     }
 
     pub async fn start(self: &Arc<Game>) {
         for player in &self.players {
-            player.send(ClientboundPacket::BeginGame);
+            player.send(ClientboundPacket::BeginGame).await;
         }
 
-        let mut deck = Self::shuffled_deck();
-
         for player in &self.players {
-            let hand = deck.split_off(deck.len() - HAND_SIZE);
-            player.send(ClientboundPacket::Setup { hand });
+            let hand = self.pop_n_cards(HAND_SIZE).await;
+            player.send(ClientboundPacket::Setup { hand }).await;
+        }
+
+        let center = ClientboundPacket::FlipCenter {
+            a: self.pop_card().await,
+            b: self.pop_card().await,
+        };
+        for player in &self.players {
+            player.send(center.clone()).await;
         }
     }
 
@@ -43,5 +54,16 @@ impl Game {
         cards.shuffle(&mut rand);
 
         cards
+    }
+
+    pub async fn pop_card(self: &Arc<Self>) -> Card {
+        let mut deck = self.deck.write().await;
+        deck.pop().expect("deck is empty")
+    }
+
+    pub async fn pop_n_cards(self: &Arc<Self>, n: usize) -> Vec<Card> {
+        let mut deck = self.deck.write().await;
+        let len = deck.len();
+        deck.split_off(len - n)
     }
 }

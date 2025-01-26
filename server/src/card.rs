@@ -12,6 +12,7 @@ impl Suit {
     pub const VALUES: [Suit; 4] = [Suit::Hearts, Suit::Diamonds, Suit::Spades, Suit::Clubs];
 }
 
+#[derive(Clone, Copy)]
 pub struct Card(pub Suit, pub u8); // ace = 0, king = 12
 
 impl Card {
