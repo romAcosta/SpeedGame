@@ -30,12 +30,25 @@ pub enum ClientboundPacket {
 }
 
 impl ClientboundPacket {
-    pub fn serialize(&self) -> Vec<u8> {
+    pub fn id(&self) -> u8 {
         use ClientboundPacket::*;
         match self {
-            LobbyResponse { code } => code.bytes().collect(),
-            BeginGame => Vec::new(),
-            Setup { hand } => hand.iter().map(|card| card.serialize()).collect(),
+            LobbyResponse { .. } => 0,
+            BeginGame => 1,
+            Setup { .. } => 2,
         }
+    }
+
+    pub fn serialize(&self) -> Vec<u8> {
+        let mut result = vec![self.id()];
+
+        use ClientboundPacket::*;
+        match self {
+            LobbyResponse { code } => result.extend(code.bytes()),
+            BeginGame => {}
+            Setup { hand } => result.extend(hand.iter().map(|card| card.serialize())),
+        }
+
+        result
     }
 }
