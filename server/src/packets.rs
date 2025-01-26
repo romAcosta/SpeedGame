@@ -6,6 +6,7 @@ use crate::card::Card;
 pub enum ServerboundPacket {
     JoinQueue,
     RequestLobby,
+    PlayCard { card: Card, action_id: u8 },
 }
 
 impl ServerboundPacket {
@@ -19,6 +20,25 @@ impl ServerboundPacket {
         Ok(match id {
             0 => JoinQueue,
             1 => RequestLobby,
+            2 => {
+                let card = data
+                    .get(1)
+                    .and_then(|encoded| Card::deserialize(*encoded))
+                    .ok_or(io::Error::new(
+                        ErrorKind::InvalidData,
+                        "packet did not specify card",
+                    ))?;
+
+                let action_id = data.get(2).ok_or(io::Error::new(
+                    ErrorKind::InvalidData,
+                    "packet did not specify action id",
+                ))?;
+
+                PlayCard {
+                    card,
+                    action_id: *action_id,
+                }
+            }
             _ => return Err(io::Error::new(ErrorKind::InvalidData, "packet is invalid")),
         })
     }

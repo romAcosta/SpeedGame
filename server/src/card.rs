@@ -21,4 +21,10 @@ impl Card {
     pub fn serialize(&self) -> u8 {
         self.0 as u8 | (self.1 << 2)
     }
+
+    pub fn deserialize(data: u8) -> Option<Self> {
+        let suit = Suit::VALUES.get(data as usize & 0b11)?;
+        let rank = (data >> 2) as u8;
+        Some(Card(*suit, rank))
+    }
 }
