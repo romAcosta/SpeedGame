@@ -1,6 +1,6 @@
 use std::ops::Range;
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub enum Suit {
     Hearts,
     Diamonds,
@@ -12,7 +12,7 @@ impl Suit {
     pub const VALUES: [Suit; 4] = [Suit::Hearts, Suit::Diamonds, Suit::Spades, Suit::Clubs];
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub struct Card(pub Suit, pub u8); // ace = 0, king = 12
 
 impl Card {

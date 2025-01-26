@@ -2,6 +2,7 @@ use std::io::{self, ErrorKind};
 
 use crate::card::Card;
 
+#[derive(Debug)]
 pub enum ServerboundPacket {
     JoinQueue,
     RequestLobby,
@@ -23,7 +24,7 @@ impl ServerboundPacket {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum ClientboundPacket {
     LobbyResponse { code: String },
     BeginGame,

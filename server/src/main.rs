@@ -16,6 +16,7 @@ use packets::{ClientboundPacket, ServerboundPacket};
 use rand::Rng;
 use tokio::net::{TcpListener, TcpStream};
 use tokio::sync::RwLock;
+use tracing::{debug, info};
 
 type WsError = tokio_tungstenite::tungstenite::Error;
 
@@ -73,8 +74,12 @@ impl Server {
             .map_err(|e| WsError::Io(e.into()))?;
 
         match packet {
-            Some((_, ServerboundPacket::RequestLobby)) => self.handle_play_friend(connection).await,
+            Some((_, ServerboundPacket::RequestLobby)) => {
+                debug!(addr = ?addr, "Client requested lobby creation");
+                self.handle_play_friend(connection).await
+            }
             Some((_, ServerboundPacket::JoinQueue)) => {
+                debug!(addr = ?addr, "Client joined matchmaking queue");
                 self.handle_random_opponent(connection).await
             }
             _ => {
@@ -91,23 +96,28 @@ impl Server {
     async fn handle_play_friend(self: &Arc<Self>, connection: Connection) {
         let lobby_code = self.random_code();
 
+        debug!(lobby = lobby_code, "Creating new lobby");
+
         connection
             .send(ClientboundPacket::LobbyResponse {
                 code: lobby_code.clone(),
             })
             .await;
 
-        self.open_lobbies.insert(lobby_code, connection);
+        self.open_lobbies.insert(lobby_code.clone(), connection);
+        debug!(lobby = lobby_code, "Lobby created and awaiting opponent");
     }
 
     async fn handle_random_opponent(self: &Arc<Self>, connection: Connection) {
         let mut opponent = self.opponent_to_match.write().await;
         match opponent.take() {
             Some(opp) => {
+                debug!("Matching players for random game");
                 let game = Game::new(connection, opp);
                 tokio::spawn(async move { game.start().await });
             }
             None => {
+                debug!("Player joined matchmaking queue");
                 let _ = opponent.insert(connection);
             }
         }
@@ -132,6 +142,16 @@ impl Server {
 
 #[tokio::main]
 async fn main() {
+    tracing_subscriber::fmt()
+        .with_max_level(tracing::Level::DEBUG)
+        .with_target(true)
+        .with_thread_ids(true)
+        .with_file(true)
+        .with_line_number(true)
+        .init();
+
+    info!("Starting Speed card game server");
     let server = Server::new().await.unwrap();
+    info!("Server initialized, accepting connections");
     server.run().await;
 }

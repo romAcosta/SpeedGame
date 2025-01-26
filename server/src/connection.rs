@@ -1,5 +1,6 @@
 use std::io::{self, ErrorKind};
 use std::net::SocketAddr;
+use tracing::{debug, error};
 
 use futures::stream::{SplitSink, SplitStream};
 use futures::{SinkExt, StreamExt};
@@ -38,13 +39,19 @@ impl Connection {
         address: SocketAddr,
         inbound_tx: mpsc::Sender<(SocketAddr, ServerboundPacket)>,
     ) -> Result<(), tokio_tungstenite::tungstenite::Error> {
+        debug!(?address, "Starting websocket read loop");
+
         while let Some(Ok(msg)) = read.next().await {
             let packet = Self::parse_packet(msg).await?;
+            debug!(?address, ?packet, "Received packet");
+
             if let Err(_) = inbound_tx.send((address, packet)).await {
+                error!(?address, "Failed to forward packet to game logic");
                 break;
             }
         }
 
+        debug!(?address, "Websocket read loop ended");
         Ok(())
     }
 
@@ -64,8 +71,12 @@ impl Connection {
     }
 
     pub async fn send(&self, packet: ClientboundPacket) {
+        debug!(packet = ?packet, "Sending packet");
         let message = Message::Binary(packet.serialize().into());
-        let _ = self.outbound_tx.send(message).await;
+
+        if let Err(e) = self.outbound_tx.send(message).await {
+            error!(?e, "Failed to send packet");
+        }
     }
 
     async fn parse_packet(message: Message) -> Result<ServerboundPacket, io::Error> {

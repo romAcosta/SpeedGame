@@ -1,6 +1,7 @@
 use rand::seq::SliceRandom;
 use std::sync::Arc;
 use tokio::sync::RwLock;
+use tracing::{debug, info};
 
 use crate::card::{Card, Suit};
 use crate::connection::Connection;
@@ -24,12 +25,17 @@ impl Game {
     }
 
     pub async fn start(self: &Arc<Game>) {
+        info!("Starting new game with {} players", self.players.len());
+
+        debug!("Sending BeginGame packets");
         for player in &self.players {
             player.send(ClientboundPacket::BeginGame).await;
         }
 
+        debug!("Dealing initial hands");
         for player in &self.players {
             let hand = self.pop_n_cards(HAND_SIZE).await;
+            debug!(cards = ?hand, "Dealt hand to player");
             player.send(ClientboundPacket::Setup { hand }).await;
         }
 
