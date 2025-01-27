@@ -21,7 +21,11 @@ impl Connection {
         let (outbound_tx, outbound_rx) = mpsc::channel(16);
         let (inbound_tx, inbound_rx) = mpsc::channel(16);
 
-        tokio::spawn(Self::io_loop(conn, inbound_tx, outbound_rx));
+        tokio::spawn(async move {
+            if let Err(e) = Self::io_loop(conn, inbound_tx, outbound_rx).await {
+                warn!("Error in websocket IO loop: {}", e);
+            }
+        });
 
         Ok(Connection {
             outbound_tx,
@@ -53,6 +57,7 @@ impl Connection {
                     conn.send(msg).await?;
                 },
                 else => {
+                    debug!("Websocket channel closed");
                     break;
                 }
             }
@@ -68,10 +73,7 @@ impl Connection {
     pub async fn send(&self, packet: ClientboundPacket) {
         debug!(packet = ?packet, "Sending packet");
         let message = Message::Binary(packet.serialize().into());
-
-        if let Err(e) = self.outbound_tx.send(message).await {
-            error!(?e, "Failed to send packet");
-        }
+        let _ = self.outbound_tx.send(message).await;
     }
 
     async fn parse_packet(message: Message) -> Result<ServerboundPacket, io::Error> {
