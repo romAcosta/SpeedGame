@@ -1,17 +1,40 @@
 use rand::seq::SliceRandom;
 use std::sync::Arc;
-use tokio::sync::RwLock;
+use tokio::sync::{Mutex, RwLock};
 use tracing::{debug, info};
 
 use crate::card::{Card, Suit};
 use crate::connection::Connection;
-use crate::packets::ClientboundPacket;
+use crate::packets::{ClientboundPacket, ServerboundPacket};
 
 const HAND_SIZE: usize = 5;
 
+pub struct Player {
+    connection: Connection,
+    hand: Mutex<Vec<Card>>,
+}
+
+impl Player {
+    pub fn new(connection: Connection) -> Self {
+        Player {
+            connection,
+            hand: Mutex::new(Vec::new()),
+        }
+    }
+
+    pub async fn send(&self, packet: ClientboundPacket) {
+        self.connection.send(packet).await;
+    }
+
+    pub async fn next(&self) -> Option<ServerboundPacket> {
+        self.connection.next().await
+    }
+}
+
 pub struct Game {
-    pub players: Vec<Connection>,
+    pub players: [Player; 2],
     pub deck: RwLock<Vec<Card>>,
+    play_area: Mutex<[Vec<Card>; 2]>,
 }
 
 impl Game {
@@ -19,33 +42,78 @@ impl Game {
         let deck = Self::shuffled_deck();
 
         Arc::new(Game {
-            players: vec![player_a, player_b],
+            players: [Player::new(player_a), Player::new(player_b)],
             deck: RwLock::new(deck),
+            play_area: Mutex::new([const { Vec::new() }; 2]),
         })
     }
 
     pub async fn start(self: &Arc<Game>) {
-        info!("Starting new game with {} players", self.players.len());
+        info!("Game starting");
 
-        debug!("Sending BeginGame packets");
         for player in &self.players {
             player.send(ClientboundPacket::BeginGame).await;
-        }
 
-        debug!("Dealing initial hands");
-        for player in &self.players {
-            let hand = self.pop_n_cards(HAND_SIZE).await;
+            let mut hand = player.hand.lock().await;
+            hand.extend(self.pop_n_cards(HAND_SIZE).await);
             debug!(cards = ?hand, "Dealt hand to player");
-            player.send(ClientboundPacket::Setup { hand }).await;
+
+            player
+                .send(ClientboundPacket::Setup {
+                    hand: hand.to_vec(),
+                })
+                .await;
         }
 
-        let center = ClientboundPacket::FlipCenter {
-            a: self.pop_card().await,
-            b: self.pop_card().await,
-        };
-        for player in &self.players {
-            player.send(center.clone()).await;
+        self.flip_center().await;
+
+        while self.tick().await {}
+    }
+
+    async fn tick(self: &Arc<Game>) -> bool {
+        tokio::select! {
+            Some(a_packet) = self.players[0].next() => {
+                match a_packet {
+                    ServerboundPacket::PlayCard { card, action_id } => {
+
+                    }
+                    _ => return false
+                }
+                true
+            }
+            Some(b) = self.players[1].next() => {
+                true
+            }
+            else => return false
         }
+    }
+
+    async fn handle_packet(self: &Arc<Game>, packet: ServerboundPacket, player_num: usize) -> bool {
+        let player = &self.players[player_num];
+        let other_player = &self.players[(player_num + 1) % 2];
+        let mut hand = player.hand.lock().await;
+        let mut play_area = self.play_area.lock().await;
+
+        match packet {
+            ServerboundPacket::PlayCard { card, action_id } => {
+                let card_index = match hand.iter().position(|c| *c == card) {
+                    Some(i) => i,
+                    None => return false,
+                };
+
+                let card = hand.remove(card_index);
+
+                let deck_id = action_id & 1;
+                play_area[deck_id as usize].push(card);
+
+                other_player
+                    .send(ClientboundPacket::PlayCard { card, action_id })
+                    .await;
+            }
+            _ => {}
+        }
+
+        true
     }
 
     pub fn shuffled_deck() -> Vec<Card> {
@@ -62,14 +130,25 @@ impl Game {
         cards
     }
 
-    pub async fn pop_card(self: &Arc<Self>) -> Card {
-        let mut deck = self.deck.write().await;
-        deck.pop().expect("deck is empty")
-    }
-
     pub async fn pop_n_cards(self: &Arc<Self>, n: usize) -> Vec<Card> {
         let mut deck = self.deck.write().await;
         let len = deck.len();
         deck.split_off(len - n)
+    }
+
+    pub async fn flip_center(self: &Arc<Self>) {
+        let new_cards = self.pop_n_cards(2).await;
+
+        let mut play_area = self.play_area.lock().await;
+        play_area[0].push(new_cards[0]);
+        play_area[1].push(new_cards[1]);
+
+        let packet = ClientboundPacket::FlipCenter {
+            a: new_cards[0],
+            b: new_cards[1],
+        };
+        for player in &self.players {
+            player.send(packet.clone()).await;
+        }
     }
 }
