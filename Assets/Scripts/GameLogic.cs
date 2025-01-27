@@ -1,4 +1,5 @@
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using TMPro;
@@ -19,6 +20,8 @@ public class GameLogic : MonoBehaviour
     
     [SerializeField] TMP_Text countdownText;
     [SerializeField] StateData stateData;
+    
+    [SerializeField] Connection connection;
     //Middle Cards
     private Stack<(int Rank, string Suit)> _leftMiddleDeck = new Stack<(int Rank, string Suit)>();
     private Stack<(int Rank, string Suit)> _leftMiddleStack = new Stack<(int Rank, string Suit)>();
@@ -45,33 +48,32 @@ public class GameLogic : MonoBehaviour
     
     void Start()
     {
-        Shuffle(_deck);
-        SetCards();
+        Debug.Log("Game Start");
+        //SetCards();
         
         
     }
 
     void FixedUpdate()
     {
-        DrawCards();
+        //DrawCards();
         ControlTimerCountdown();
-        if (go)
+        if (timer > 0)
         {
-            PlayMiddleCards();
+            timer = 5;
+            go = true;
         }
-        else
-        {
-            if (!CheckCards())
+            /*if (!CheckCards())
             {
                 timer = 5;
                 go = true;
             }
-        }
+        */
     }
 
     void LateUpdate()
     {
-        LookForWinner();
+        //LookForWinner();
     }
 
     #region WinConditions
@@ -169,7 +171,7 @@ public class GameLogic : MonoBehaviour
         {
             (int Rank, string Suit)[] currentHand = (player) ? _playerHand : _opponentHand;
             Stack<(int Rank, string Suit)> currentStack = (left) ? _leftMiddleStack : _rightMiddleStack;
-            if (true)//ValidatePlacement(currentHand[position], currentStack.Peek()))
+            if (ValidatePlacement(currentHand[position], currentStack.Peek()))
             {
                 
                 currentStack.Push(currentHand[position]);
@@ -238,7 +240,7 @@ public class GameLogic : MonoBehaviour
         }
     }
 
-    void SetCards()
+   /*void SetCards()
     {
         bool left = false;
         for (int i = 0; i < _deck.Count; i++)
@@ -257,7 +259,21 @@ public class GameLogic : MonoBehaviour
             }
         }
     }
+    */
+    public void DrawCard(byte Card){
+        Debug.Log("Card Recieved");
+        
+           for (int i = 0; i < _playerHand.Length; i++)
+            {
+                if (_playerHand[i] == (0, null))
+                {
+                    _playerHand[i] = CardTranslator.DecodeCard(Card);
 
+                    Debug.Log("Successfull Card Recieved:" + _playerHand[i].Rank + " of " + _playerHand[i].Suit);
+                }
+            }
+        
+    }
     void DrawCards()
     {
         if (controlTimer <= 0)

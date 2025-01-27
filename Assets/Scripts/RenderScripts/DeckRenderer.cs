@@ -7,25 +7,26 @@ public class DeckRenderer : MonoBehaviour
     [SerializeField] private GameLogic gameLogic;
     [SerializeField] private Sprite sprite;
     private SpriteRenderer sr;
-
+    public bool IsEmpty;
     private Stack<(int Rank, string Suit)> deck;
 
     void Start()
     {
+        Debug.Log("DeckRenderer Start");
         sr = GetComponent<SpriteRenderer>();
         switch (position)
         {
             case 1:
-                deck = gameLogic.PlayerStack;
+                sr.sprite = sprite;
                 break;
             case 2:
-                deck = gameLogic.OpponentStack;
+                sr.sprite = sprite;
                 break;
             case 3:
-                deck = gameLogic.LeftMiddleDeck;
+                sr.sprite = sprite;
                 break;
             case 4:
-                deck = gameLogic.RightMiddleDeck;
+                sr.sprite = sprite;
                 break;
         }
     }
@@ -33,7 +34,7 @@ public class DeckRenderer : MonoBehaviour
     
     void Update()
     {
-        if (deck.Count > 0)
+        if (!IsEmpty)
         {
             sr.sprite = sprite;
         }

@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 public class CardTranslator : MonoBehaviour
@@ -22,5 +23,20 @@ public class CardTranslator : MonoBehaviour
             default:
                 return null;
         }
+    }
+    public static (int , string) DecodeCard(byte card){
+        int value = (card >> 2) & 0b00111111;
+        return (value, DecodeSuit(card & 0b00000011));
+    }
+    private static string DecodeSuit(int suitValue)
+    {
+        return suitValue switch
+        {
+            0 => "H",  // Hearts
+            1 => "D",  // Diamonds
+            2 => "S",  // Spades
+            3 => "C",  // Clubs
+            _ => null
+        };
     }
 }
