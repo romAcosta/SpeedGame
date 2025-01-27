@@ -84,6 +84,8 @@ impl Game {
         let mut hand = player.hand.lock().await;
         let mut play_area = self.play_area.lock().await;
 
+        debug!(player = player_num, ?packet, "Handling player packet");
+
         match packet {
             ServerboundPacket::PlayCard { card, action_id } => {
                 let card_index = match hand.iter().position(|c| *c == card) {
@@ -96,6 +98,12 @@ impl Game {
 
                 let card = hand[card_index];
                 if !card.stackable_on(*deck.last().unwrap()) {
+                    debug!(
+                        player = player_num,
+                        ?card,
+                        action_id,
+                        "Rejecting invalid card play"
+                    );
                     player
                         .send(ClientboundPacket::RejectCard { action_id })
                         .await;
@@ -105,11 +113,18 @@ impl Game {
                 hand.remove(card_index);
                 play_area[deck_id as usize].push(card);
 
+                debug!(
+                    player = player_num,
+                    ?card,
+                    deck = deck_id,
+                    "Player played card successfully"
+                );
+
                 other_player
                     .send(ClientboundPacket::PlayCard { card, action_id })
                     .await;
             }
-            _ => {}
+            _ => return false,
         }
 
         true

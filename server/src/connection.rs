@@ -37,7 +37,9 @@ impl Connection {
         mut read: SplitStream<Socket>,
         inbound_tx: mpsc::Sender<ServerboundPacket>,
     ) -> Result<(), tokio_tungstenite::tungstenite::Error> {
+        debug!("Starting websocket read loop");
         while let Some(Ok(msg)) = read.next().await {
+            debug!(?msg, "Received websocket message");
             let packet = Self::parse_packet(msg).await?;
 
             if let Err(_) = inbound_tx.send(packet).await {
@@ -52,9 +54,12 @@ impl Connection {
         mut write: SplitSink<Socket, Message>,
         mut outbound_rx: mpsc::Receiver<Message>,
     ) -> Result<(), tokio_tungstenite::tungstenite::Error> {
+        debug!("Starting websocket write loop");
         while let Some(msg) = outbound_rx.recv().await {
+            debug!(?msg, "Sending websocket message");
             write.send(msg).await?;
         }
+        debug!("Write loop terminated");
 
         Ok(())
     }
@@ -75,7 +80,8 @@ impl Connection {
     async fn parse_packet(message: Message) -> Result<ServerboundPacket, io::Error> {
         let bytes = match message {
             Message::Binary(b) => b,
-            _ => {
+            other => {
+                debug!(?other, "Received non-binary message type");
                 return Err(io::Error::new(
                     ErrorKind::InvalidData,
                     "non-binary packet type",
