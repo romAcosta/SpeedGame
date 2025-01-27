@@ -15,7 +15,7 @@ use game::Game;
 use packets::{ClientboundPacket, ServerboundPacket};
 use rand::Rng;
 use tokio::net::{TcpListener, TcpStream};
-use tokio::sync::{Mutex, RwLock};
+use tokio::sync::{oneshot, Mutex, RwLock};
 use tracing::{debug, info};
 
 type WsError = tokio_tungstenite::tungstenite::Error;
@@ -26,7 +26,7 @@ const CODE_CHARS: &[u8] =
 
 pub struct Server {
     listener: Mutex<TcpListener>,
-    open_lobbies: DashMap<String, Connection>,
+    open_lobbies: DashMap<String, oneshot::Sender<Connection>>,
     opponent_to_match: RwLock<Option<Connection>>,
 }
 
@@ -104,8 +104,22 @@ impl Server {
             })
             .await;
 
-        self.open_lobbies.insert(lobby_code.clone(), connection);
-        debug!(lobby = lobby_code, "Lobby created and awaiting opponent");
+        let (opponent_tx, opponent_rx) = oneshot::channel();
+        self.open_lobbies.insert(lobby_code.clone(), opponent_tx);
+
+        tokio::select! {
+            opponent = opponent_rx => {
+                let game = Game::new(connection, opponent.unwrap());
+                tokio::spawn(async move { game.start().await });
+            }
+            Some(ServerboundPacket::JoinLobby { code }) = connection.next() => {
+                if let Some((_, sender)) = self.open_lobbies.remove(&code) {
+                    sender.send(connection).unwrap();
+                }
+            }
+        }
+
+        self.open_lobbies.remove(&lobby_code);
     }
 
     async fn handle_random_opponent(self: &Arc<Self>, connection: Connection) {

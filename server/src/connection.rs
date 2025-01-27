@@ -1,5 +1,5 @@
 use std::io::{self, ErrorKind};
-use tracing::{debug, error, warn};
+use tracing::{debug, warn};
 
 use futures::{SinkExt, StreamExt};
 use tokio::net::TcpStream;
@@ -10,6 +10,7 @@ use crate::packets::{ClientboundPacket, ServerboundPacket};
 
 type WsError = tokio_tungstenite::tungstenite::Error;
 
+#[derive(Debug)]
 pub struct Connection {
     outbound_tx: mpsc::Sender<Message>,
     inbound_rx: Mutex<mpsc::Receiver<ServerboundPacket>>,

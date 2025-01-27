@@ -7,6 +7,7 @@ pub enum ServerboundPacket {
     JoinQueue,
     RequestLobby,
     PlayCard { card: Card, action_id: u8 },
+    JoinLobby { code: String },
 }
 
 impl ServerboundPacket {
@@ -38,6 +39,19 @@ impl ServerboundPacket {
                     card,
                     action_id: *action_id,
                 }
+            }
+            3 => {
+                let code = match String::from_utf8(data[1..].to_vec()) {
+                    Ok(c) if c.len() == 5 => c,
+                    _ => {
+                        return Err(io::Error::new(
+                            ErrorKind::InvalidData,
+                            "packet did not specify 5-digit lobby code",
+                        ))
+                    }
+                };
+
+                JoinLobby { code }
             }
             _ => return Err(io::Error::new(ErrorKind::InvalidData, "packet is invalid")),
         })
