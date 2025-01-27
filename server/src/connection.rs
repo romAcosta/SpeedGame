@@ -1,5 +1,5 @@
 use std::io::{self, ErrorKind};
-use tracing::{debug, error};
+use tracing::{debug, error, warn};
 
 use futures::{SinkExt, StreamExt};
 use tokio::net::TcpStream;
@@ -38,11 +38,13 @@ impl Connection {
 
         loop {
             tokio::select! {
-                Some(Ok(msg)) = conn.next() => {
+                Some(maybe_msg) = conn.next() => {
+                    let msg = maybe_msg?;
                     debug!(?msg, "Received websocket message");
-                    let packet = Self::parse_packet(msg).await?;
 
-                    if let Err(_) = inbound_tx.send(packet).await {
+                    let packet = Self::parse_packet(msg).await?;
+                    if let Err(e) = inbound_tx.send(packet).await {
+                        warn!(?e, "Failed to send websocket message");
                         break;
                     }
                 }
