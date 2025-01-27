@@ -60,7 +60,7 @@ pub enum ClientboundPacket {
     PlayCard { card: Card, action_id: u8 },
     RejectCard { action_id: u8 },
     Inactivity { level: InactivityLevel },
-    DrawCard,
+    DrawCard { card: Card },
 }
 
 impl ClientboundPacket {
@@ -74,7 +74,7 @@ impl ClientboundPacket {
             PlayCard { .. } => 4,
             RejectCard { .. } => 5,
             Inactivity { .. } => 6,
-            DrawCard => 7,
+            DrawCard { .. } => 7,
         }
     }
 
@@ -92,7 +92,7 @@ impl ClientboundPacket {
             }
             RejectCard { action_id } => result.push(*action_id),
             Inactivity { level } => result.push(*level as u8),
-            DrawCard => {}
+            DrawCard { card } => result.push(card.serialize()),
         }
 
         result
