@@ -67,7 +67,15 @@ impl Game {
 
         self.flip_center().await;
 
-        while self.tick().await {}
+        loop {
+            if self.no_more_moves().await {
+                self.flip_center().await;
+            }
+
+            if !self.tick().await {
+                break;
+            }
+        }
     }
 
     async fn tick(self: &Arc<Game>) -> bool {
@@ -125,6 +133,24 @@ impl Game {
                     .await;
             }
             _ => return false,
+        }
+
+        true
+    }
+
+    pub async fn no_more_moves(self: &Arc<Self>) -> bool {
+        let play_area = self.play_area.lock().await;
+
+        for player in &self.players {
+            for card in player.hand.lock().await.iter() {
+                if card.stackable_on(play_area[0].last().unwrap()) {
+                    return false;
+                }
+
+                if card.stackable_on(play_area[1].last().unwrap()) {
+                    return false;
+                }
+            }
         }
 
         true

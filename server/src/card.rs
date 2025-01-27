@@ -28,7 +28,7 @@ impl Card {
         Some(Card(*suit, rank))
     }
 
-    pub fn stackable_on(&self, other: Card) -> bool {
+    pub fn stackable_on(&self, other: &Card) -> bool {
         let diff = (self.1 as i32 - other.1 as i32).abs();
         return diff == 1 || diff == 12;
     }
