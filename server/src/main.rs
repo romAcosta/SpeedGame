@@ -15,7 +15,7 @@ use game::Game;
 use packets::{ClientboundPacket, ServerboundPacket};
 use rand::Rng;
 use tokio::net::{TcpListener, TcpStream};
-use tokio::sync::RwLock;
+use tokio::sync::{Mutex, RwLock};
 use tracing::{debug, info};
 
 type WsError = tokio_tungstenite::tungstenite::Error;
@@ -25,7 +25,7 @@ const CODE_CHARS: &[u8] =
     "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz".as_bytes();
 
 pub struct Server {
-    listener: RwLock<TcpListener>,
+    listener: Mutex<TcpListener>,
     open_lobbies: DashMap<String, Connection>,
     opponent_to_match: RwLock<Option<Connection>>,
 }
@@ -35,14 +35,14 @@ impl Server {
         let listener = TcpListener::bind("127.0.0.1:8080").await?;
 
         Ok(Arc::new(Server {
-            listener: RwLock::new(listener),
+            listener: Mutex::new(listener),
             open_lobbies: DashMap::new(),
             opponent_to_match: RwLock::new(None),
         }))
     }
 
     pub async fn run(self: &Arc<Server>) {
-        let listener = self.listener.read().await;
+        let listener = self.listener.lock().await;
         loop {
             let (socket, addr) = match listener.accept().await {
                 Ok((socket, addr)) => (socket, addr),
