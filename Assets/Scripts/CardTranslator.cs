@@ -19,14 +19,20 @@ public class CardTranslator : MonoBehaviour
             case "D":
                 return cardSprites[39 + index];
             case null:
+                Debug.Log("Null");
                 return null;
             default:
+                Debug.Log("Invalid Suit");
                 return null;
         }
     }
     public static (int , string) DecodeCard(byte card){
-        int value = (card >> 2) & 0b00111111;
-        return (value, DecodeSuit(card & 0b00000011));
+        Debug.Log("Value:" + card);
+        string newCard = Convert.ToString( card & 0b111111, 2).PadLeft(6, '0');
+        Debug.Log(newCard);
+        // Convert.ToInt16(newCard.Substring(2,4), 2)
+        // DecodeSuit(Convert.ToInt16(newCard.Substring(0, 2), 2))
+        return (card >> 2, DecodeSuit(card & 0b11));
     }
     private static string DecodeSuit(int suitValue)
     {

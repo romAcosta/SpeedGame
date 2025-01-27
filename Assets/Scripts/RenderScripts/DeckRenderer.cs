@@ -12,7 +12,6 @@ public class DeckRenderer : MonoBehaviour
 
     void Start()
     {
-        Debug.Log("DeckRenderer Start");
         sr = GetComponent<SpriteRenderer>();
         switch (position)
         {

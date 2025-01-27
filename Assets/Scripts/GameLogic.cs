@@ -58,7 +58,7 @@ public class GameLogic : MonoBehaviour
     {
         //DrawCards();
         ControlTimerCountdown();
-        if (timer > 0)
+        if (timer < 0)
         {
             timer = 5;
             go = true;
@@ -129,21 +129,15 @@ public class GameLogic : MonoBehaviour
         return false;
     }
 
-    void FlipMiddleStacks()
-    {
-        _leftMiddleStack.Reverse();
-        _rightMiddleStack.Reverse();
-        for (int i = 0; i < _leftMiddleStack.Count; i++)
-        {
-            _leftMiddleDeck.Push(_leftMiddleStack.Pop());
-        }
-        for (int i = 0; i < _rightMiddleStack.Count; i++)
-        {
-            _leftMiddleDeck.Push(_leftMiddleStack.Pop());
-        }
-        
-        _leftMiddleStack.Clear();
-        _rightMiddleStack.Clear();
+    public void FlipMiddleStacks(byte left, byte right)
+    {       
+            (int rank, string suit)rightStack = CardTranslator.DecodeCard(right);
+            (int rank, string suit)leftStack = CardTranslator.DecodeCard(left);
+            Debug.Log("Successfull Card Recieved:" + rightStack.rank + " of " + rightStack.suit);
+            Debug.Log("Successfull Card Recieved:" + leftStack.rank + " of " + leftStack.suit);
+            _leftMiddleDeck.Push(leftStack);
+            _leftMiddleStack.Push(rightStack);
+            
     }
     
     
@@ -205,29 +199,6 @@ public class GameLogic : MonoBehaviour
     #endregion
     
     #region Set Up
-    void PlayMiddleCards()
-    {
-        timer -= Time.fixedDeltaTime;
-        if (timer <= 0)
-        {
-            if (_leftMiddleStack.Count == 0)
-            {
-                FlipMiddleStacks();
-            }
-            _leftMiddleStack.Push(_leftMiddleDeck.Pop());
-            _rightMiddleStack.Push(_rightMiddleDeck.Pop());
-            timer = 3f;
-            countdownText.enabled = false;
-            go = false;
-        }
-        else
-        {
-            countdownText.enabled = true;
-            countdownText.text = timer.ToString("0");
-        }
-    }
-    
-    
     void Shuffle(List<(int Rank, string Suit)> list)
     {
         System.Random random = new System.Random();
@@ -261,15 +232,14 @@ public class GameLogic : MonoBehaviour
     }
     */
     public void DrawCard(byte Card){
-        Debug.Log("Card Recieved");
-        
+        Debug.Log("Card Recieved " + Card);
            for (int i = 0; i < _playerHand.Length; i++)
             {
                 if (_playerHand[i] == (0, null))
                 {
                     _playerHand[i] = CardTranslator.DecodeCard(Card);
-
                     Debug.Log("Successfull Card Recieved:" + _playerHand[i].Rank + " of " + _playerHand[i].Suit);
+                    break;
                 }
             }
         

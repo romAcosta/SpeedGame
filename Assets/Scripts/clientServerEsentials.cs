@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using UnityEngine.Rendering;
 using Unity.VisualScripting;
 using System.Net.Security;
+using System.Linq;
 
 public class Connection : MonoBehaviour
 {
@@ -53,17 +54,14 @@ public class Connection : MonoBehaviour
           break;
         case 2:
           Debug.Log("Game Setup Successfull");
-          foreach (byte value in bytes)
-          {   
-              gameLogic.DrawCard(value);
+          foreach (byte value in bytes .Skip(1))
+          { 
+            gameLogic.DrawCard(value);
           }
           break;
         case 3:
-          Debug.Log("Card Flip Successfull");
-          for (int i = 0; i < bytes.Length - 1; i++)
-          {
-            Debug.Log(bytes[i]);
-          }
+            gameLogic.FlipMiddleStacks(bytes[1], bytes[2]);   
+            Debug.Log("Card Flip Successfull");
           break;
         case 4:
         
