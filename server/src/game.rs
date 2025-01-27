@@ -101,9 +101,18 @@ impl Game {
                     None => return false,
                 };
 
-                let card = hand.remove(card_index);
-
                 let deck_id = action_id & 1;
+                let deck = &play_area[deck_id as usize];
+
+                let card = hand[card_index];
+                if !card.stackable_on(*deck.last().unwrap()) {
+                    player
+                        .send(ClientboundPacket::RejectCard { action_id })
+                        .await;
+                    return true;
+                }
+
+                hand.remove(card_index);
                 play_area[deck_id as usize].push(card);
 
                 other_player

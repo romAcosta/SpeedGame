@@ -4,7 +4,7 @@ use tracing::{debug, error};
 use futures::stream::{SplitSink, SplitStream};
 use futures::{SinkExt, StreamExt};
 use tokio::net::TcpStream;
-use tokio::sync::mpsc;
+use tokio::sync::{mpsc, Mutex};
 use tokio_tungstenite::tungstenite::Message;
 use tokio_tungstenite::WebSocketStream;
 
@@ -29,7 +29,7 @@ impl Connection {
 
         Ok(Connection {
             outbound_tx,
-            inbound_rx,
+            inbound_rx: Mutex::new(inbound_rx),
         })
     }
 
