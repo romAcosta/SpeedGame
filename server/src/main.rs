@@ -111,12 +111,12 @@ impl Server {
     async fn handle_random_opponent(self: &Arc<Self>, connection: Connection) {
         let mut opponent = self.opponent_to_match.write().await;
         match opponent.take() {
-            Some(opp) => {
+            Some(opponent_conn) if opponent_conn.is_open() => {
                 debug!("Matching players for random game");
-                let game = Game::new(connection, opp);
+                let game = Game::new(connection, opponent_conn);
                 tokio::spawn(async move { game.start().await });
             }
-            None => {
+            _ => {
                 debug!("Player joined matchmaking queue");
                 let _ = opponent.insert(connection);
             }

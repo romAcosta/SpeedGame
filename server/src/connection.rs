@@ -76,6 +76,10 @@ impl Connection {
         let _ = self.outbound_tx.send(message).await;
     }
 
+    pub fn is_open(&self) -> bool {
+        !self.outbound_tx.is_closed()
+    }
+
     async fn parse_packet(message: Message) -> Result<ServerboundPacket, io::Error> {
         let bytes = match message {
             Message::Binary(b) => b,
