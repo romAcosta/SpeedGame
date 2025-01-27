@@ -1,13 +1,15 @@
 use rand::seq::SliceRandom;
 use std::sync::Arc;
+use std::time::Duration;
 use tokio::sync::{Mutex, RwLock};
 use tracing::{debug, info};
 
 use crate::card::{Card, Suit};
 use crate::connection::Connection;
-use crate::packets::{ClientboundPacket, ServerboundPacket};
+use crate::packets::{ClientboundPacket, InactivityLevel, ServerboundPacket};
 
 const HAND_SIZE: usize = 5;
+const FORCE_PLAY_TIMEOUT: Duration = Duration::from_secs(10);
 
 pub struct Player {
     connection: Connection,
@@ -79,6 +81,20 @@ impl Game {
     }
 
     async fn tick(self: &Arc<Game>) -> bool {
+        match tokio::time::timeout(FORCE_PLAY_TIMEOUT, self.read_next_message()).await {
+            Ok(continue_game) => continue_game,
+            Err(_) => {
+                self.players[0]
+                    .send(ClientboundPacket::Inactivity {
+                        level: InactivityLevel::ForcePlay,
+                    })
+                    .await;
+                true
+            }
+        }
+    }
+
+    async fn read_next_message(self: &Arc<Self>) -> bool {
         tokio::select! {
             Some(a_packet) = self.players[0].next() => self.handle_packet(a_packet, 0).await,
             Some(b_packet) = self.players[1].next() => self.handle_packet(b_packet, 1).await,
@@ -91,6 +107,7 @@ impl Game {
         let other_player = &self.players[(player_num + 1) % 2];
         let mut hand = player.hand.lock().await;
         let mut play_area = self.play_area.lock().await;
+        let mut deck = self.deck.write().await;
 
         debug!(player = player_num, ?packet, "Handling player packet");
 
@@ -102,10 +119,10 @@ impl Game {
                 };
 
                 let deck_id = action_id & 1;
-                let deck = &play_area[deck_id as usize];
+                let play_deck = &play_area[deck_id as usize];
 
                 let card = hand[card_index];
-                if !card.stackable_on(*deck.last().unwrap()) {
+                if !card.stackable_on(play_deck.last().unwrap()) {
                     debug!(
                         player = player_num,
                         ?card,
@@ -131,6 +148,13 @@ impl Game {
                 other_player
                     .send(ClientboundPacket::PlayCard { card, action_id })
                     .await;
+
+                let drawn_card = deck.pop().unwrap();
+                player
+                    .send(ClientboundPacket::DrawCard { card: drawn_card })
+                    .await;
+
+                hand.push(drawn_card);
             }
             _ => return false,
         }
