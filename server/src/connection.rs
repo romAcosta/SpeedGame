@@ -1,16 +1,13 @@
 use std::io::{self, ErrorKind};
 use tracing::{debug, error};
 
-use futures::stream::{SplitSink, SplitStream};
 use futures::{SinkExt, StreamExt};
 use tokio::net::TcpStream;
 use tokio::sync::{mpsc, Mutex};
 use tokio_tungstenite::tungstenite::Message;
-use tokio_tungstenite::WebSocketStream;
 
 use crate::packets::{ClientboundPacket, ServerboundPacket};
 
-type Socket = WebSocketStream<TcpStream>;
 type WsError = tokio_tungstenite::tungstenite::Error;
 
 pub struct Connection {
@@ -20,12 +17,11 @@ pub struct Connection {
 
 impl Connection {
     pub async fn new(stream: TcpStream) -> Result<Connection, WsError> {
-        let (write, read) = tokio_tungstenite::accept_async(stream).await?.split();
+        let conn = tokio_tungstenite::accept_async(stream).await?;
         let (outbound_tx, outbound_rx) = mpsc::channel(16);
         let (inbound_tx, inbound_rx) = mpsc::channel(16);
 
-        tokio::spawn(Self::read_loop(read, inbound_tx));
-        tokio::spawn(Self::write_loop(write, outbound_rx));
+        tokio::spawn(Self::io_loop(conn, inbound_tx, outbound_rx));
 
         Ok(Connection {
             outbound_tx,
@@ -33,33 +29,32 @@ impl Connection {
         })
     }
 
-    pub async fn read_loop(
-        mut read: SplitStream<Socket>,
+    pub async fn io_loop(
+        mut conn: tokio_tungstenite::WebSocketStream<TcpStream>,
         inbound_tx: mpsc::Sender<ServerboundPacket>,
-    ) -> Result<(), tokio_tungstenite::tungstenite::Error> {
-        debug!("Starting websocket read loop");
-        while let Some(Ok(msg)) = read.next().await {
-            debug!(?msg, "Received websocket message");
-            let packet = Self::parse_packet(msg).await?;
-
-            if let Err(_) = inbound_tx.send(packet).await {
-                break;
-            }
-        }
-
-        Ok(())
-    }
-
-    pub async fn write_loop(
-        mut write: SplitSink<Socket, Message>,
         mut outbound_rx: mpsc::Receiver<Message>,
     ) -> Result<(), tokio_tungstenite::tungstenite::Error> {
-        debug!("Starting websocket write loop");
-        while let Some(msg) = outbound_rx.recv().await {
-            debug!(?msg, "Sending websocket message");
-            write.send(msg).await?;
+        debug!("Starting websocket read loop");
+
+        loop {
+            tokio::select! {
+                Some(Ok(msg)) = conn.next() => {
+                    debug!(?msg, "Received websocket message");
+                    let packet = Self::parse_packet(msg).await?;
+
+                    if let Err(_) = inbound_tx.send(packet).await {
+                        break;
+                    }
+                }
+                Some(msg) = outbound_rx.recv() => {
+                    debug!(?msg, "Sending websocket message");
+                    conn.send(msg).await?;
+                },
+                else => {
+                    break;
+                }
+            }
         }
-        debug!("Write loop terminated");
 
         Ok(())
     }
@@ -85,7 +80,7 @@ impl Connection {
                 return Err(io::Error::new(
                     ErrorKind::InvalidData,
                     "non-binary packet type",
-                ))
+                ));
             }
         };
 
