@@ -67,7 +67,7 @@ impl Server {
         stream: TcpStream,
         addr: SocketAddr,
     ) -> Result<(), WsError> {
-        let mut connection = Connection::new(stream).await?;
+        let connection = Connection::new(stream).await?;
 
         let packet = tokio::time::timeout(HANDSHAKE_TIMEOUT, connection.next())
             .await

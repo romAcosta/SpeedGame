@@ -72,18 +72,8 @@ impl Game {
 
     async fn tick(self: &Arc<Game>) -> bool {
         tokio::select! {
-            Some(a_packet) = self.players[0].next() => {
-                match a_packet {
-                    ServerboundPacket::PlayCard { card, action_id } => {
-
-                    }
-                    _ => return false
-                }
-                true
-            }
-            Some(b) = self.players[1].next() => {
-                true
-            }
+            Some(a_packet) = self.players[0].next() => self.handle_packet(a_packet, 0).await,
+            Some(b_packet) = self.players[1].next() => self.handle_packet(b_packet, 1).await,
             else => return false
         }
     }
