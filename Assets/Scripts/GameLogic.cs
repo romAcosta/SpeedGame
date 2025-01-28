@@ -67,10 +67,20 @@ public class GameLogic : MonoBehaviour
         switch (packet.Type)
         {
             case ClientboundPacketType.Setup:
-                var p = (SetupPacket) packet;
-                foreach (Card card in p.Hand)
                 {
-                    _playerStack.Push(card.ToTuple());
+                    var p = (SetupPacket) packet;
+                    foreach (Card card in p.Hand)
+                    {
+                        _playerStack.Push(card.ToTuple());
+                    }
+                }
+                break;
+
+            case ClientboundPacketType.FlipCenter:
+                {
+                    var p = (FlipCenterPacket) packet;
+                    _leftMiddleStack.Push(p.CardA.ToTuple());
+                    _rightMiddleStack.Push(p.CardB.ToTuple());
                 }
                 break;
 
@@ -247,8 +257,6 @@ public class GameLogic : MonoBehaviour
             {
                 FlipMiddleStacks();
             }
-            _leftMiddleStack.Push(_leftMiddleDeck.Pop());
-            _rightMiddleStack.Push(_rightMiddleDeck.Pop());
             timer = 3f;
             countdownText.enabled = false;
             go = false;
