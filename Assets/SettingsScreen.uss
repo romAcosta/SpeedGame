@@ -1,0 +1,32 @@
+.header {
+}
+
+.label {
+    -unity-font-definition: url("project://database/Assets/JosefinSans-Italic.ttf?fileID=12800000&guid=47a7af40b2b50c94d8c3f69f55f5d76a&type=3#JosefinSans-Italic");
+    color: rgb(228, 37, 85);
+    font-size: 45px;
+    top: 505px;
+}
+
+.button {
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+    border-bottom-right-radius: 10px;
+    border-bottom-left-radius: 10px;
+    -unity-font-definition: url("project://database/Assets/JosefinSans-Italic.ttf?fileID=12800000&guid=47a7af40b2b50c94d8c3f69f55f5d76a&type=3#JosefinSans-Italic");
+    color: rgb(41, 47, 55);
+    background-color: rgba(49, 55, 66, 0);
+    margin-top: 0;
+    margin-right: 0;
+    margin-bottom: 0;
+    margin-left: 0;
+    padding-top: 10px;
+    padding-right: 10px;
+    padding-bottom: 10px;
+    padding-left: 10px;
+    top: 659px;
+    left: 678px;
+    width: 500px;
+    height: 100px;
+    font-size: 50px;
+}
