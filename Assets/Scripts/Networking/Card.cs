@@ -19,6 +19,27 @@ public class Card
         Rank = rank;
     }
 
+    public static Card FromTuple((int rank, string suit) tuple)
+    {
+        Suit suit = Suit.Hearts;
+        switch (tuple.suit)
+        {
+            case "H":
+                suit = Suit.Hearts;
+                break;
+            case "D":
+                suit = Suit.Diamonds;
+                break;
+            case "S":
+                suit = Suit.Spades;
+                break;
+            case "C":
+                suit = Suit.Clubs;
+                break;
+        }
+        return new Card(suit, (byte) (tuple.rank - 1));
+    }
+
     public byte Serialize()
     {
         return (byte)((byte)Suit | (Rank << 2));

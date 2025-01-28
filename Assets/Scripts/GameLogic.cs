@@ -212,20 +212,21 @@ public class GameLogic : MonoBehaviour
     {
         if (controlTimer <= 0 && !go)
         {
-            (int Rank, string Suit)[] currentHand = (player) ? _playerHand : _opponentHand;
+            (int Rank, string Suit)[] currentHand = _playerHand;
             Stack<(int Rank, string Suit)> currentStack = (left) ? _leftMiddleStack : _rightMiddleStack;
-            if (ValidatePlacement(currentHand[position], currentStack.Peek()))
+            var card = Card.FromTuple(currentHand[position]);
+            Connections.MAIN.SendPacket(new PlayCardPacket(card, (byte) (left ? 0 : 1)));
+            currentHand[position] = (0, null);
+            currentStack.Push(currentHand[position]);
+            /*if (ValidatePlacement(currentHand[position], currentStack.Peek()))
             {
-                
-                currentStack.Push(currentHand[position]);
-                currentHand[position] = (0, null);
                 controlTimer = placeTime;
             }
             else
             {
                 error = true;
                 controlTimer = errorTime;
-            }
+            }*/
         }
 
     }
