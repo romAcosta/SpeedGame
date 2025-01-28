@@ -8,14 +8,6 @@ using UnityEngine.SceneManagement;
 
 public class GameLogic : MonoBehaviour
 {
-    private List<(int Rank, string Suit)> _deck = new List<(int Rank, string Suit)>
-    {
-        (1, "D"), (2, "D"), (3, "D"), (4, "D"), (5, "D"), (6, "D"), (7, "D"), (8, "D"), (9, "D"), (10, "D"), (11, "D"), (12, "D"), (13, "D"),
-        (1, "C"), (2, "C"), (3, "C"), (4, "C"), (5, "C"), (6, "C"), (7, "C"), (8, "C"), (9, "C"), (10, "C"), (11, "C"), (12, "C"), (13, "C"),
-        (1, "H"), (2, "H"), (3, "H"), (4, "H"), (5, "H"), (6, "H"), (7, "H"), (8, "H"), (9, "H"), (10, "H"), (11, "H"), (12, "H"), (13, "H"),
-        (1, "S"), (2, "S"), (3, "S"), (4, "S"), (5, "S"), (6, "S"), (7, "S"), (8, "S"), (9, "S"), (10, "S"), (11, "S"), (12, "S"), (13, "S")
-    };
-    
     [SerializeField] TMP_Text countdownText;
     [SerializeField] StateData stateData;
     //Middle Cards
@@ -23,8 +15,6 @@ public class GameLogic : MonoBehaviour
     private Stack<(int Rank, string Suit)> _rightMiddleStack = new Stack<(int Rank, string Suit)>();
     
     //Player Cards
-    private Stack<(int Rank, string Suit)> _playerStack = new Stack<(int Rank, string Suit)>();
-    private Stack<(int Rank, string Suit)> _opponentStack = new Stack<(int Rank, string Suit)>();
     private (int Rank, string Suit)[] _playerHand = new (int Rank, string Suit)[5];
     private bool[] _opponentHand = new bool[5] { true, true, true, true, true };
 
@@ -43,8 +33,6 @@ public class GameLogic : MonoBehaviour
     {
         Connections.MAIN = new Connection();
         Connections.MAIN.OnOpen(NetworkingStart);
-
-        Shuffle(_deck);
     }
 
     async void NetworkingStart()
@@ -65,10 +53,7 @@ public class GameLogic : MonoBehaviour
             case ClientboundPacketType.Setup:
                 {
                     var p = (SetupPacket) packet;
-                    foreach (Card card in p.Hand)
-                    {
-                        _playerStack.Push(card.ToTuple());
-                    }
+                    _playerHand = p.Hand.Select(card => card.ToTuple()).ToArray();
                 }
                 break;
 
@@ -157,30 +142,12 @@ public class GameLogic : MonoBehaviour
 
     void FixedUpdate()
     {
-        DrawCards();
         ControlTimerCountdown();
         if (go)
         {
             PlayMiddleCards();
         }
-        else
-        {
-            if (!CheckCards())
-            {
-                timer = 5;
-                go = true;
-            }
-        }
     }
-
-    #region Middle Cards
-
-    bool CheckCards()
-    {
-        return true;
-    }
-
-    #endregion
     
     #region Controls
     void ControlTimerCountdown()
@@ -196,6 +163,7 @@ public class GameLogic : MonoBehaviour
         }
         
     }
+
     public void PlayCard(bool player, int position, bool left)
     {
         if (controlTimer <= 0 && !go)
@@ -220,25 +188,10 @@ public class GameLogic : MonoBehaviour
         }
 
     }
-    bool ValidatePlacement((int Rank, string Suit) newCard, (int Rank, string Suit) pastCard)
-    {
-        if(newCard.Rank == 0) return false;
-        if ((newCard.Rank == 1 && pastCard.Rank == 13) || (newCard.Rank == 13 && pastCard.Rank == 1))
-        {
-            return true;
-        }
-
-        if (newCard.Rank == (pastCard.Rank + 1) || newCard.Rank == (pastCard.Rank - 1))
-        {
-            return true;
-        }
-        
-        return false;
-    }
     
     #endregion
-    
     #region Set Up
+
     void PlayMiddleCards()
     {
         timer -= Time.fixedDeltaTime;
@@ -259,46 +212,12 @@ public class GameLogic : MonoBehaviour
         }
     }
     
-    
-    void Shuffle(List<(int Rank, string Suit)> list)
-    {
-        System.Random random = new System.Random();
-        int cards = list.Count;
-        while (cards > 1)
-        {
-            cards--;
-            int k = random.Next(cards + 1);
-            (list[k], list[cards]) = (list[cards], list[k]); 
-        }
-    }
-
-    void DrawCards()
-    {
-        if (controlTimer <= 0)
-        {
-            for (int i = 0; i < _playerHand.Length; i++)
-            {
-                if (_playerHand[i] == (0, null) && _playerStack.Count > 0)
-                {
-                    _playerHand[i] = _playerStack.Pop();
-                }
-
-                /*if (_opponentHand[i] == (0, null) && _opponentStack.Count > 0)
-                {
-                    _opponentHand[i] = _opponentStack.Pop();
-                }*/
-            }
-        }
-    }
-
     #endregion
     
     #region Getters
 
     public Stack<(int Rank, string Suit)> RightMiddleStack => _rightMiddleStack;
     public Stack<(int Rank, string Suit)> LeftMiddleStack => _leftMiddleStack;
-    public Stack<(int Rank, string Suit)> PlayerStack => _playerStack;
-    public Stack<(int Rank, string Suit)> OpponentStack => _opponentStack;
     public (int Rank, string Suit)[] PlayerHand => _playerHand;
     public bool[] OpponentHand => _opponentHand;
     
