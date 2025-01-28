@@ -156,7 +156,7 @@ impl Game {
 
                     hand.push(drawn_card);
                 } else {
-                    other_play.send(ClientboundPacket::RemoveCard);
+                    other_player.send(ClientboundPacket::RemoveCard).await;
                 }
             }
             _ => return false,
