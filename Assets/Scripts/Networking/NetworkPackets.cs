@@ -92,7 +92,7 @@ public abstract class ClientboundPacket
             ClientboundPacketType.BeginGame => new BeginGamePacket(),
             ClientboundPacketType.Setup => new SetupPacket(payload),
             ClientboundPacketType.FlipCenter => new FlipCenterPacket(payload),
-            ClientboundPacketType.PlayCard => new PlayCardResponsePacket(payload),
+            ClientboundPacketType.PlayCard => new OpponentPlayCardPacket(payload),
             ClientboundPacketType.RejectCard => new RejectCardPacket(payload),
             ClientboundPacketType.Inactivity => new InactivityPacket(payload),
             ClientboundPacketType.DrawCard => new DrawCardPacket(payload),
@@ -145,13 +145,13 @@ public class FlipCenterPacket : ClientboundPacket
     }
 }
 
-public class PlayCardResponsePacket : ClientboundPacket
+public class OpponentPlayCardPacket : ClientboundPacket
 {
     public Card Card { get; }
     public byte ActionId { get; }
     public override ClientboundPacketType Type => ClientboundPacketType.PlayCard;
 
-    public PlayCardResponsePacket(byte[] payload)
+    public OpponentPlayCardPacket(byte[] payload)
     {
         Card = Card.Deserialize(payload[0]);
         ActionId = payload[1];

@@ -98,6 +98,15 @@ public class GameLogic : MonoBehaviour
                 }
                 break;
 
+            case ClientboundPacketType.PlayCard:
+                {
+                    var p = (OpponentPlayCardPacket) packet;
+                    bool left = (p.ActionId & 1) == 0;
+                    var stack = left ? _leftMiddleStack : _rightMiddleStack;
+                    stack.Push(p.Card.ToTuple());
+                }
+                break;
+
             case ClientboundPacketType.RejectCard:
                 {
                     var p = (RejectCardPacket) packet;
