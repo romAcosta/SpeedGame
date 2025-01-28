@@ -84,6 +84,20 @@ public class GameLogic : MonoBehaviour
                 }
                 break;
 
+            case ClientboundPacketType.DrawCard:
+                {
+                    var p = (DrawCardPacket) packet;
+                    for (int i = 0; i < _playerHand.Length; i++)
+                    {
+                        if (_playerHand[i] == (0, null))
+                        {
+                            _playerHand[i] = p.Card.ToTuple();
+                            break;
+                        }
+                    }
+                }
+                break;
+
             default:
                 Debug.LogError("Unexpected packet: " + packet);
                 break;
