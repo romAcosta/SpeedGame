@@ -601,6 +601,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a8c8fee5aa857ca468b41553bb60c3ca, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  keybindData: {fileID: 11400000, guid: 86d18fa90518a8744b7d56054456614b, type: 2}
   uiDocument1: {fileID: 1916432965}
   uiDocument2: {fileID: 790485931}
   targetObject: {fileID: 227271737}
