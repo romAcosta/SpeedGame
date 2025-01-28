@@ -1,4 +1,3 @@
-
 using System.Collections.Generic;
 using System.Linq;
 using TMPro;
@@ -41,14 +40,22 @@ public class GameLogic : MonoBehaviour
     private float controlTimer = 0.0f;
     private bool go = true;
     private float timer = 3f;
-    
+
+    private Connection connection;
     
     void Start()
     {
+        Connections.MAIN = new Connection();
+        StartCoroutine("NetworkingStart");
+
         Shuffle(_deck);
         SetCards();
-        
-        
+    }
+
+    async void NetworkingStart()
+    {
+        await Connections.MAIN.Connect();
+        await Connections.MAIN.SendPacket(new JoinQueuePacket());
     }
 
     void FixedUpdate()
