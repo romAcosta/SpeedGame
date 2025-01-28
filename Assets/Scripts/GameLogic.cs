@@ -177,52 +177,6 @@ public class GameLogic : MonoBehaviour
         }
     }
 
-    void LateUpdate()
-    {
-        LookForWinner();
-    }
-
-    #region WinConditions
-
-    void LookForWinner(){
-
-        bool playerHandFull = false;
-        for (int i = 0; i < _playerHand.Length; i++)
-        {
-            if (_playerHand[i].Rank != 0)
-            {
-                playerHandFull = true;
-            }
-        }
-
-        bool opponentVictory = true;
-        for (int i = 0; i < _opponentHand.Length; i++)
-        {
-            if (_opponentHand[i])
-            {
-                opponentVictory = false;
-                break;
-            }
-        }
-
-        /*if (!playerHandFull && _playerStack.Count == 0)
-        {
-            stateData.winnerNum = 1;
-            SceneManager.LoadScene("Win");
-        }
-
-        if (!opponentHandFull && _opponentStack.Count == 0)
-        {
-            stateData.winnerNum = 2;
-            SceneManager.LoadScene("Win");
-        }*/
-        
-    }
-
-    
-
-    #endregion
-    
     #region Middle Cards
 
     bool CheckCards()
@@ -246,11 +200,8 @@ public class GameLogic : MonoBehaviour
         _leftMiddleStack.Clear();
         _rightMiddleStack.Clear();
     }
-    
-    
 
     #endregion
-
     
     #region Controls
     void ControlTimerCountdown()
@@ -276,15 +227,17 @@ public class GameLogic : MonoBehaviour
             Connections.MAIN.SendPacket(new PlayCardPacket(card, (byte) (left ? 0 : 1)));
             currentStack.Push(currentHand[position]);
             currentHand[position] = (0, null);
-            /*if (ValidatePlacement(currentHand[position], currentStack.Peek()))
+
+            for (int i = 0; i < currentHand.Length; i++)
             {
-                controlTimer = placeTime;
+                if (currentHand[i] != (0, null))
+                {
+                    return;
+                }
             }
-            else
-            {
-                error = true;
-                controlTimer = errorTime;
-            }*/
+
+            stateData.winnerNum = 1;
+            SceneManager.LoadScene("Win");
         }
 
     }
