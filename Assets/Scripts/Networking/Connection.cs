@@ -40,19 +40,13 @@ public class Connection
         }
     }
 
-    private void Update()
+    public void Update()
     {
-        if (websocket != null)
-        {
-            websocket.DispatchMessageQueue();
-        }
+        websocket.DispatchMessageQueue();
     }
 
-    private async void OnDestroy()
+    private async void Close()
     {
-        if (websocket != null)
-        {
-            await websocket.Close();
-        }
+        await websocket.Close();
     }
 }

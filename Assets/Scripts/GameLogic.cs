@@ -54,12 +54,29 @@ public class GameLogic : MonoBehaviour
 
     async void NetworkingStart()
     {
-        await Connections.MAIN.SendPacket(new JoinQueuePacket());
+        Connections.MAIN.SendPacket(new JoinQueuePacket());
+        Connections.MAIN.OnPacketReceived += OnPacket;
 
         Connections.TEMP = new Connection();
         Connections.TEMP.OnOpen(() => {
             Connections.TEMP.SendPacket(new JoinQueuePacket());
         });
+    }
+
+    void OnPacket(ClientboundPacket packet)
+    {
+        switch (packet.Type)
+        {
+            default:
+                Debug.LogError("Unexpected packet: " + packet);
+                break;
+        }
+    }
+
+    void Update()
+    {
+        Connections.MAIN.Update();
+        Connections.TEMP.Update();
     }
 
     void FixedUpdate()
