@@ -57,7 +57,7 @@ impl Game {
             player.send(ClientboundPacket::BeginGame).await;
 
             let mut hand = player.hand.lock().await;
-            hand.extend(self.pop_n_cards(HAND_SIZE).await);
+            hand.extend(self.pop_n_cards(HAND_SIZE).await.unwrap());
             debug!(cards = ?hand, "Dealt hand to player");
 
             player
@@ -70,7 +70,7 @@ impl Game {
         self.flip_center().await;
 
         loop {
-            if self.no_more_moves().await {
+            while self.no_more_moves().await {
                 self.flip_center().await;
             }
 
@@ -145,16 +145,19 @@ impl Game {
                     "Player played card successfully"
                 );
 
-                other_player
-                    .send(ClientboundPacket::PlayCard { card, action_id })
-                    .await;
+                if let Some(drawn_card) = deck.pop() {
+                    other_player
+                        .send(ClientboundPacket::PlayCard { card, action_id })
+                        .await;
 
-                let drawn_card = deck.pop().unwrap();
-                player
-                    .send(ClientboundPacket::DrawCard { card: drawn_card })
-                    .await;
+                    player
+                        .send(ClientboundPacket::DrawCard { card: drawn_card })
+                        .await;
 
-                hand.push(drawn_card);
+                    hand.push(drawn_card);
+                } else {
+                    other_player.send(ClientboundPacket::RemoveCard).await;
+                }
             }
             _ => return false,
         }
@@ -194,14 +197,22 @@ impl Game {
         cards
     }
 
-    pub async fn pop_n_cards(self: &Arc<Self>, n: usize) -> Vec<Card> {
+    pub async fn pop_n_cards(self: &Arc<Self>, n: usize) -> Option<Vec<Card>> {
         let mut deck = self.deck.write().await;
         let len = deck.len();
-        deck.split_off(len - n)
+
+        if len < n {
+            return None;
+        }
+
+        Some(deck.split_off(len - n))
     }
 
     pub async fn flip_center(self: &Arc<Self>) {
-        let new_cards = self.pop_n_cards(2).await;
+        let new_cards = match self.pop_n_cards(2).await {
+            Some(cards) => cards,
+            None => return,
+        };
 
         let mut play_area = self.play_area.lock().await;
         play_area[0].push(new_cards[0]);

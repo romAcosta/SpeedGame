@@ -1,4 +1,3 @@
-
 using System.Collections.Generic;
 using System.Linq;
 using TMPro;
@@ -9,27 +8,15 @@ using UnityEngine.SceneManagement;
 
 public class GameLogic : MonoBehaviour
 {
-    private List<(int Rank, string Suit)> _deck = new List<(int Rank, string Suit)>
-    {
-        (1, "D"), (2, "D"), (3, "D"), (4, "D"), (5, "D"), (6, "D"), (7, "D"), (8, "D"), (9, "D"), (10, "D"), (11, "D"), (12, "D"), (13, "D"),
-        (1, "C"), (2, "C"), (3, "C"), (4, "C"), (5, "C"), (6, "C"), (7, "C"), (8, "C"), (9, "C"), (10, "C"), (11, "C"), (12, "C"), (13, "C"),
-        (1, "H"), (2, "H"), (3, "H"), (4, "H"), (5, "H"), (6, "H"), (7, "H"), (8, "H"), (9, "H"), (10, "H"), (11, "H"), (12, "H"), (13, "H"),
-        (1, "S"), (2, "S"), (3, "S"), (4, "S"), (5, "S"), (6, "S"), (7, "S"), (8, "S"), (9, "S"), (10, "S"), (11, "S"), (12, "S"), (13, "S")
-    };
-    
     [SerializeField] TMP_Text countdownText;
     [SerializeField] StateData stateData;
     //Middle Cards
-    private Stack<(int Rank, string Suit)> _leftMiddleDeck = new Stack<(int Rank, string Suit)>();
     private Stack<(int Rank, string Suit)> _leftMiddleStack = new Stack<(int Rank, string Suit)>();
-    private Stack<(int Rank, string Suit)> _rightMiddleDeck = new Stack<(int Rank, string Suit)>();
     private Stack<(int Rank, string Suit)> _rightMiddleStack = new Stack<(int Rank, string Suit)>();
     
     //Player Cards
-    private Stack<(int Rank, string Suit)> _playerStack = new Stack<(int Rank, string Suit)>();
-    private Stack<(int Rank, string Suit)> _opponentStack = new Stack<(int Rank, string Suit)>();
     private (int Rank, string Suit)[] _playerHand = new (int Rank, string Suit)[5];
-    private (int Rank, string Suit)[] _opponentHand = new (int Rank, string Suit)[5];
+    private bool[] _opponentHand = new bool[5] { true, true, true, true, true };
 
     
     //Utilities
@@ -42,112 +29,133 @@ public class GameLogic : MonoBehaviour
     private bool go = true;
     private float timer = 3f;
     
-    
     void Start()
     {
-        Shuffle(_deck);
-        SetCards();
-        
-        
+        Connections.MAIN = new Connection();
+        Connections.MAIN.OnOpen(NetworkingStart);
+    }
+
+    async void NetworkingStart()
+    {
+        Connections.MAIN.SendPacket(new JoinQueuePacket());
+        Connections.MAIN.OnPacketReceived += OnPacket;
+
+        if (Application.isEditor)
+        {
+            Connections.TEMP = new Connection();
+            Connections.TEMP.OnOpen(() => {
+                Connections.TEMP.SendPacket(new JoinQueuePacket());
+            });
+        }
+    }
+
+    void OnPacket(ClientboundPacket packet)
+    {
+        switch (packet.Type)
+        {
+            case ClientboundPacketType.Setup:
+                {
+                    var p = (SetupPacket) packet;
+                    _playerHand = p.Hand.Select(card => card.ToTuple()).ToArray();
+                }
+                break;
+
+            case ClientboundPacketType.FlipCenter:
+                {
+                    var p = (FlipCenterPacket) packet;
+                    _leftMiddleStack.Push(p.CardA.ToTuple());
+                    _rightMiddleStack.Push(p.CardB.ToTuple());
+                    timer = 5;
+                    go = true;
+                }
+                break;
+
+            case ClientboundPacketType.DrawCard:
+                {
+                    var p = (DrawCardPacket) packet;
+                    for (int i = 0; i < _playerHand.Length; i++)
+                    {
+                        if (_playerHand[i] == (0, null))
+                        {
+                            _playerHand[i] = p.Card.ToTuple();
+                            break;
+                        }
+                    }
+                }
+                break;
+
+            case ClientboundPacketType.PlayCard:
+                {
+                    var p = (OpponentPlayCardPacket) packet;
+                    bool left = (p.ActionId & 1) == 0;
+                    var stack = left ? _leftMiddleStack : _rightMiddleStack;
+                    stack.Push(p.Card.ToTuple());
+                }
+                break;
+
+            case ClientboundPacketType.RejectCard:
+                {
+                    var p = (RejectCardPacket) packet;
+                    bool left = (p.ActionId & 1) == 0;
+                    var stack = left ? _leftMiddleStack : _rightMiddleStack;
+
+                    for (int i = 0; i < _playerHand.Length; i++)
+                    {
+                        if (_playerHand[i] == (0, null))
+                        {
+                            _playerHand[i] = stack.Pop();
+                            break;
+                        }
+                    }
+
+                    error = true;
+                    controlTimer = errorTime;
+                }
+                break;
+
+            case ClientboundPacketType.RemoveCard:
+                {
+                    for (int i = 0; i < _opponentHand.Length; i++)
+                    {
+                        if (_opponentHand[i])
+                        {
+                            _opponentHand[i] = false;
+
+                            if (i == _opponentHand.Length - 1)
+                            {
+                                stateData.winnerNum = 2;
+                                SceneManager.LoadScene("Win");
+                            }
+
+                            break;
+                        }
+                    }
+                }
+                break;
+
+            default:
+                Debug.LogError("Unexpected packet: " + packet);
+                break;
+        }
+    }
+
+    void Update()
+    {
+        Connections.MAIN.Update();
+        if (Application.isEditor)
+        {
+            Connections.TEMP.Update();
+        }
     }
 
     void FixedUpdate()
     {
-        DrawCards();
         ControlTimerCountdown();
         if (go)
         {
             PlayMiddleCards();
         }
-        else
-        {
-            if (!CheckCards())
-            {
-                timer = 5;
-                go = true;
-            }
-        }
     }
-
-    void LateUpdate()
-    {
-        LookForWinner();
-    }
-
-    #region WinConditions
-
-    void LookForWinner(){
-
-        bool playerHandFull = false;
-        bool opponentHandFull = false;
-
-        for (int i = 0; i < _playerHand.Length; i++)
-        {
-            if (_playerHand[i].Rank != 0)
-            {
-                playerHandFull = true;
-            }
-
-            if (_opponentHand[i].Rank != 0)
-            {
-                opponentHandFull = true;
-            }
-        }
-
-        if (!playerHandFull && _playerStack.Count == 0)
-        {
-            stateData.winnerNum = 1;
-            SceneManager.LoadScene("Win");
-        }
-
-        if (!opponentHandFull && _opponentStack.Count == 0)
-        {
-            stateData.winnerNum = 2;
-            SceneManager.LoadScene("Win");
-        }
-        
-    }
-
-    
-
-    #endregion
-    
-    #region Middle Cards
-
-    bool CheckCards()
-    {
-        for (int i = 0; i < _playerHand.Length; i++)
-        {
-            if(ValidatePlacement(PlayerHand[i],_leftMiddleStack.Peek()) || ValidatePlacement(PlayerHand[i],_rightMiddleStack.Peek())
-               || ValidatePlacement(OpponentHand[i],_leftMiddleStack.Peek()) ||  ValidatePlacement(OpponentHand[i],_rightMiddleStack.Peek()))
-            {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    void FlipMiddleStacks()
-    {
-        _leftMiddleStack.Reverse();
-        _rightMiddleStack.Reverse();
-        for (int i = 0; i < _leftMiddleStack.Count; i++)
-        {
-            _leftMiddleDeck.Push(_leftMiddleStack.Pop());
-        }
-        for (int i = 0; i < _rightMiddleStack.Count; i++)
-        {
-            _leftMiddleDeck.Push(_leftMiddleStack.Pop());
-        }
-        
-        _leftMiddleStack.Clear();
-        _rightMiddleStack.Clear();
-    }
-    
-    
-
-    #endregion
-
     
     #region Controls
     void ControlTimerCountdown()
@@ -163,46 +171,35 @@ public class GameLogic : MonoBehaviour
         }
         
     }
+
     public void PlayCard(bool player, int position, bool left)
     {
         if (controlTimer <= 0 && !go)
         {
-            (int Rank, string Suit)[] currentHand = (player) ? _playerHand : _opponentHand;
+            (int Rank, string Suit)[] currentHand = _playerHand;
             Stack<(int Rank, string Suit)> currentStack = (left) ? _leftMiddleStack : _rightMiddleStack;
-            if (ValidatePlacement(currentHand[position], currentStack.Peek()))
+            var card = Card.FromTuple(currentHand[position]);
+            Connections.MAIN.SendPacket(new PlayCardPacket(card, (byte) (left ? 0 : 1)));
+            currentStack.Push(currentHand[position]);
+            currentHand[position] = (0, null);
+
+            for (int i = 0; i < currentHand.Length; i++)
             {
-                
-                currentStack.Push(currentHand[position]);
-                currentHand[position] = (0, null);
-                controlTimer = placeTime;
+                if (currentHand[i] != (0, null))
+                {
+                    return;
+                }
             }
-            else
-            {
-                error = true;
-                controlTimer = errorTime;
-            }
+
+            stateData.winnerNum = 1;
+            SceneManager.LoadScene("Win");
         }
 
-    }
-    bool ValidatePlacement((int Rank, string Suit) newCard, (int Rank, string Suit) pastCard)
-    {
-        if(newCard.Rank == 0) return false;
-        if ((newCard.Rank == 1 && pastCard.Rank == 13) || (newCard.Rank == 13 && pastCard.Rank == 1))
-        {
-            return true;
-        }
-
-        if (newCard.Rank == (pastCard.Rank + 1) || newCard.Rank == (pastCard.Rank - 1))
-        {
-            return true;
-        }
-        
-        return false;
     }
     
     #endregion
-    
     #region Set Up
+
     void PlayMiddleCards()
     {
         timer -= Time.fixedDeltaTime;
@@ -210,10 +207,8 @@ public class GameLogic : MonoBehaviour
         {
             if (_leftMiddleStack.Count == 0)
             {
-                FlipMiddleStacks();
+                // todo flip animation
             }
-            _leftMiddleStack.Push(_leftMiddleDeck.Pop());
-            _rightMiddleStack.Push(_rightMiddleDeck.Pop());
             timer = 3f;
             countdownText.enabled = false;
             go = false;
@@ -225,70 +220,14 @@ public class GameLogic : MonoBehaviour
         }
     }
     
-    
-    void Shuffle(List<(int Rank, string Suit)> list)
-    {
-        System.Random random = new System.Random();
-        int cards = list.Count;
-        while (cards > 1)
-        {
-            cards--;
-            int k = random.Next(cards + 1);
-            (list[k], list[cards]) = (list[cards], list[k]); 
-        }
-    }
-
-    void SetCards()
-    {
-        bool left = false;
-        for (int i = 0; i < _deck.Count; i++)
-        {
-            if (left)
-            {
-                if (i < 10) _leftMiddleDeck.Push((_deck[i]));
-                else _playerStack.Push(_deck[i]);
-                left = false;
-            }
-            else
-            {
-                if (i < 10) _rightMiddleDeck.Push(_deck[i]);
-                else _opponentStack.Push(_deck[i]);
-                left = true;
-            }
-        }
-    }
-
-    void DrawCards()
-    {
-        if (controlTimer <= 0)
-        {
-            for (int i = 0; i < _playerHand.Length; i++)
-            {
-                if (_playerHand[i] == (0, null) && _playerStack.Count > 0)
-                {
-                    _playerHand[i] = _playerStack.Pop();
-                }
-
-                if (_opponentHand[i] == (0, null) && _opponentStack.Count > 0)
-                {
-                    _opponentHand[i] = _opponentStack.Pop();
-                }
-            }
-        }
-    }
-
     #endregion
     
     #region Getters
 
-    public Stack<(int Rank, string Suit)> LeftMiddleDeck => _leftMiddleDeck;
-    public Stack<(int Rank, string Suit)> RightMiddleDeck => _rightMiddleDeck;
     public Stack<(int Rank, string Suit)> RightMiddleStack => _rightMiddleStack;
     public Stack<(int Rank, string Suit)> LeftMiddleStack => _leftMiddleStack;
-    public Stack<(int Rank, string Suit)> PlayerStack => _playerStack;
-    public Stack<(int Rank, string Suit)> OpponentStack => _opponentStack;
     public (int Rank, string Suit)[] PlayerHand => _playerHand;
-    public (int Rank, string Suit)[] OpponentHand => _opponentHand;
+    public bool[] OpponentHand => _opponentHand;
     
 
     public bool Error { get => error; }

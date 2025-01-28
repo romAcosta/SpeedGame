@@ -46,7 +46,7 @@ public class HandCardRenderer : MonoBehaviour
 
     (int Rank, string Suit) GetCard()
     {
-        return (player) ? gameLogic.PlayerHand[position] : gameLogic.OpponentHand[position];  
+        return gameLogic.PlayerHand[position];  
     }
     
     
