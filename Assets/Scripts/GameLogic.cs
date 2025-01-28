@@ -169,7 +169,7 @@ public class GameLogic : MonoBehaviour
         {
             (int Rank, string Suit)[] currentHand = (player) ? _playerHand : _opponentHand;
             Stack<(int Rank, string Suit)> currentStack = (left) ? _leftMiddleStack : _rightMiddleStack;
-            if (true)//ValidatePlacement(currentHand[position], currentStack.Peek()))
+            if (ValidatePlacement(currentHand[position], currentStack.Peek()))
             {
                 
                 currentStack.Push(currentHand[position]);
