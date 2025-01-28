@@ -11,6 +11,7 @@ public class MainMenuEvents : MonoBehaviour
     private Button StartGameBtn, SettingsBtn,lobbyCodeBtn, settingsCloseBtn, saveChangesBtn;
     private TextElement lobbyCode;    
     private TextField[] keysLeft = new TextField[5], keysRight = new TextField[5];
+    [SerializeField]public InputData keybindData;
     private string lobbyCodetxt;
     public UIDocument uiDocument1; 
     public UIDocument uiDocument2; 
@@ -60,19 +61,40 @@ public class MainMenuEvents : MonoBehaviour
         KeyCode[] keyCodesRight = new KeyCode[keysRight.Length];
         for (int i = 0; i < keysLeft.Length; i++)
         {
-            if (keysLeft[i].value != null || !keyCodesLeft.Contains((KeyCode)Enum.Parse(typeof(KeyCode), keysLeft[i].value)))
+            if (keysLeft[i].value != null || !keyCodesLeft.Contains((KeyCode)Enum.Parse(typeof(KeyCode), keysLeft[i].value, true)))
             {
-                keyCodesLeft[i] = (KeyCode)Enum.Parse(typeof(KeyCode), keysLeft[i].value);
+                System.Enum.TryParse(keysLeft[i].value, true, out KeyCode key);keyCodesLeft[i] = key;
+                Debug.Log(key);
             }
-            if (keysRight[i].value != null || !keyCodesRight.Contains((KeyCode)Enum.Parse(typeof(KeyCode), keysRight[i].value))){
-                keyCodesRight[i] = (KeyCode)Enum.Parse(typeof(KeyCode), keysRight[i].value);
+            if (keysRight[i].value != null || !keyCodesRight.Contains((KeyCode)Enum.Parse(typeof(KeyCode), keysRight[i].value, true))){
+                System.Enum.TryParse(keysRight[i].value, true, out KeyCode key);
+                Debug.Log(key);
+                keyCodesRight[i] = key;
             }
         }
-        Debug.Log(keyCodesLeft);
-        Debug.Log(keyCodesRight);
-        Debug.Log("Success?");
+        keyChange(keyCodesLeft, keyCodesRight);
         }else{
             Debug.Log("Null");
+        }
+    }
+
+    private void keyChange(KeyCode[] keyCodesLeft, KeyCode[] keyCodesRight)
+    {
+        string checker = "";
+        if (keyCodesLeft != null && keyCodesRight != null){
+            for (int i = 0; i < keyCodesLeft.Length; i++)
+            {
+                if(keybindData.leftKeys[i] != keyCodesLeft[i] & !checker.Contains(keyCodesLeft[i].ToString()))
+                {
+                    checker += keyCodesLeft[i].ToString();
+                    keybindData.leftKeys[i] = keyCodesLeft[i];
+                }
+                if(keybindData.rightKeys[i] != keyCodesRight[i] & !checker.Contains(keyCodesRight[i].ToString()))
+                {
+                    checker += keyCodesRight[i].ToString();
+                    keybindData.rightKeys[i] = keyCodesRight[i];
+                }
+            }
         }
     }
 
