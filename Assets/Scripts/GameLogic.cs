@@ -40,8 +40,6 @@ public class GameLogic : MonoBehaviour
     private float controlTimer = 0.0f;
     private bool go = true;
     private float timer = 3f;
-
-    private Connection connection;
     
     void Start()
     {
