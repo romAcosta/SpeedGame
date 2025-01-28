@@ -145,6 +145,7 @@ public class GameLogic : MonoBehaviour
                         }
                     }
                 }
+                break;
 
             default:
                 Debug.LogError("Unexpected packet: " + packet);
