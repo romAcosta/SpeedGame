@@ -19,7 +19,7 @@ public class OpponentCardRenderer: MonoBehaviour
     
     void Update()
     {
-        if (GetCard() != (0,null))
+        if (HasCard())
         {
             _spriteRenderer.sprite = sprite;
         }
@@ -29,10 +29,8 @@ public class OpponentCardRenderer: MonoBehaviour
         }
     }
     
-    (int Rank, string Suit) GetCard()
+    bool HasCard()
     {
-        return (player) ? gameLogic.PlayerHand[position]: gameLogic.OpponentHand[position];  
+        return (player) ? gameLogic.PlayerHand[position] != (0, null) : gameLogic.OpponentHand[position];  
     }
-    
-    
 }

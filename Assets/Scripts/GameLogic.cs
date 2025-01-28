@@ -28,7 +28,7 @@ public class GameLogic : MonoBehaviour
     private Stack<(int Rank, string Suit)> _playerStack = new Stack<(int Rank, string Suit)>();
     private Stack<(int Rank, string Suit)> _opponentStack = new Stack<(int Rank, string Suit)>();
     private (int Rank, string Suit)[] _playerHand = new (int Rank, string Suit)[5];
-    private (int Rank, string Suit)[] _opponentHand = new (int Rank, string Suit)[5];
+    private bool[] _opponentHand = new bool[5] { true, true, true, true, true };
 
     
     //Utilities
@@ -167,18 +167,21 @@ public class GameLogic : MonoBehaviour
     void LookForWinner(){
 
         bool playerHandFull = false;
-        bool opponentHandFull = false;
-
         for (int i = 0; i < _playerHand.Length; i++)
         {
             if (_playerHand[i].Rank != 0)
             {
                 playerHandFull = true;
             }
+        }
 
-            if (_opponentHand[i].Rank != 0)
+        bool opponentVictory = true;
+        for (int i = 0; i < _opponentHand.Length; i++)
+        {
+            if (_opponentHand[i])
             {
-                opponentHandFull = true;
+                opponentVictory = false;
+                break;
             }
         }
 
@@ -204,15 +207,7 @@ public class GameLogic : MonoBehaviour
 
     bool CheckCards()
     {
-        for (int i = 0; i < _playerHand.Length; i++)
-        {
-            if(ValidatePlacement(PlayerHand[i],_leftMiddleStack.Peek()) || ValidatePlacement(PlayerHand[i],_rightMiddleStack.Peek())
-               || ValidatePlacement(OpponentHand[i],_leftMiddleStack.Peek()) ||  ValidatePlacement(OpponentHand[i],_rightMiddleStack.Peek()))
-            {
-                return true;
-            }
-        }
-        return false;
+        return true;
     }
 
     void FlipMiddleStacks()
@@ -336,10 +331,10 @@ public class GameLogic : MonoBehaviour
                     _playerHand[i] = _playerStack.Pop();
                 }
 
-                if (_opponentHand[i] == (0, null) && _opponentStack.Count > 0)
+                /*if (_opponentHand[i] == (0, null) && _opponentStack.Count > 0)
                 {
                     _opponentHand[i] = _opponentStack.Pop();
-                }
+                }*/
             }
         }
     }
@@ -355,7 +350,7 @@ public class GameLogic : MonoBehaviour
     public Stack<(int Rank, string Suit)> PlayerStack => _playerStack;
     public Stack<(int Rank, string Suit)> OpponentStack => _opponentStack;
     public (int Rank, string Suit)[] PlayerHand => _playerHand;
-    public (int Rank, string Suit)[] OpponentHand => _opponentHand;
+    public bool[] OpponentHand => _opponentHand;
     
 
     public bool Error { get => error; }
