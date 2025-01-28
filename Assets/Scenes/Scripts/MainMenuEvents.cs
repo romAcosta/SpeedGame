@@ -3,19 +3,23 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Unity.VisualScripting;
+using Unity.VisualScripting.Dependencies.Sqlite;
 using UnityEngine;
 using UnityEngine.UIElements;
 
 public class MainMenuEvents : MonoBehaviour
 {
-    private Button StartGameBtn, SettingsBtn,lobbyCodeBtn, settingsCloseBtn, saveChangesBtn;
+    private Button StartGameBtn, SettingsBtn,lobbyCodeBtn, settingsCloseBtn, saveChangesBtn, lobbyCodeInputBtn;
     private TextElement lobbyCode;    
     private TextField[] keysLeft = new TextField[5], keysRight = new TextField[5];
+    private TextField lobbyCodeField;
+    [SerializeField]public InputData keybindData;
     private string lobbyCodetxt;
     public UIDocument uiDocument1; 
     public UIDocument uiDocument2; 
     private VisualElement root1; 
     private VisualElement root2;
+    String LobbyCode;
     [SerializeField] private GameObject targetObject;
     private void Awake()
     {
@@ -33,8 +37,8 @@ public class MainMenuEvents : MonoBehaviour
         keysRight[2] = root2.Q<TextField>("KeyRight3");
         keysRight[3] = root2.Q<TextField>("KeyRight4");
         keysRight[4] = root2.Q<TextField>("KeyRight5");
-        ApplyLengthRestriction(keysLeft);
-        ApplyLengthRestriction(keysRight);
+        ApplyLengthRestriction(keysLeft, 2);
+        ApplyLengthRestriction(keysRight, 2);
         Debug.Log("Before Button");
         saveChangesBtn = root2.Q<Button>("saveChangesButton");
         saveChangesBtn.clickable.clicked += OnSaveChangesButtonClicked;
@@ -43,6 +47,10 @@ public class MainMenuEvents : MonoBehaviour
         settingsCloseBtn.clickable.clicked += OnSettingsCloseButtonClicked;
         #endregion
         #region Main UI variables
+        lobbyCodeInputBtn = root1.Q<Button>("lobbyCodeInputButton");
+        lobbyCodeInputBtn.clickable.clicked += OnLobbyCodeInputButtonClicked;
+        lobbyCodeField = root1.Q<TextField>("lobbyCodeInput");
+        lobbyCodeField.maxLength = 8;
         lobbyCode = root1.Q<TextElement>("LobbyCode");
         StartGameBtn = root1.Q<Button>("StartGameBtn");
         StartGameBtn.clickable.clicked += OnPlayButtonClicked;
@@ -53,6 +61,16 @@ public class MainMenuEvents : MonoBehaviour
         #endregion
     }
 
+    private void OnLobbyCodeInputButtonClicked()
+    {
+        if(lobbyCodeField.value == null || lobbyCodeField.value.Length != 8){
+            lobbyCodeField.value = "Invalid Code";
+        }else{
+            LobbyCode = lobbyCodeField.value;
+            Debug.Log(LobbyCode);
+        }
+    }
+
     private void OnSaveChangesButtonClicked()
     {
         if (keysLeft != null || keysRight != null){
@@ -60,19 +78,38 @@ public class MainMenuEvents : MonoBehaviour
         KeyCode[] keyCodesRight = new KeyCode[keysRight.Length];
         for (int i = 0; i < keysLeft.Length; i++)
         {
-            if (keysLeft[i].value != null || !keyCodesLeft.Contains((KeyCode)Enum.Parse(typeof(KeyCode), keysLeft[i].value)))
+            if (keysLeft[i].value != null || !keyCodesLeft.Contains((KeyCode)Enum.Parse(typeof(KeyCode), keysLeft[i].value, true)))
             {
-                keyCodesLeft[i] = (KeyCode)Enum.Parse(typeof(KeyCode), keysLeft[i].value);
+                System.Enum.TryParse(keysLeft[i].value, true, out KeyCode key);keyCodesLeft[i] = key;
             }
-            if (keysRight[i].value != null || !keyCodesRight.Contains((KeyCode)Enum.Parse(typeof(KeyCode), keysRight[i].value))){
-                keyCodesRight[i] = (KeyCode)Enum.Parse(typeof(KeyCode), keysRight[i].value);
+            if (keysRight[i].value != null || !keyCodesRight.Contains((KeyCode)Enum.Parse(typeof(KeyCode), keysRight[i].value, true))){
+                System.Enum.TryParse(keysRight[i].value, true, out KeyCode key);
+                keyCodesRight[i] = key;
             }
         }
-        Debug.Log(keyCodesLeft);
-        Debug.Log(keyCodesRight);
-        Debug.Log("Success?");
+        keyChange(keyCodesLeft, keyCodesRight);
         }else{
             Debug.Log("Null");
+        }
+    }
+
+    private void keyChange(KeyCode[] keyCodesLeft, KeyCode[] keyCodesRight)
+    {
+        string checker = "";
+        if (keyCodesLeft != null && keyCodesRight != null){
+            for (int i = 0; i < keyCodesLeft.Length; i++)
+            {
+                if(keybindData.leftKeys[i] != keyCodesLeft[i] & !checker.Contains(keyCodesLeft[i].ToString()))
+                {
+                    checker += keyCodesLeft[i].ToString();
+                    keybindData.leftKeys[i] = keyCodesLeft[i];
+                }
+                if(keybindData.rightKeys[i] != keyCodesRight[i] & !checker.Contains(keyCodesRight[i].ToString()))
+                {
+                    checker += keyCodesRight[i].ToString();
+                    keybindData.rightKeys[i] = keyCodesRight[i];
+                }
+            }
         }
     }
 
@@ -147,7 +184,7 @@ public class MainMenuEvents : MonoBehaviour
         root2.style.display = DisplayStyle.None;
         }
     }
-    private void ApplyLengthRestriction(TextField[] textFields)
+    private void ApplyLengthRestriction(TextField[] textFields , int maxLength)
     {
         foreach (var textField in textFields)
         {
@@ -155,10 +192,9 @@ public class MainMenuEvents : MonoBehaviour
             {
                 textField.RegisterValueChangedCallback(evt =>
                 {
-                    // Trim the value to 1 character if it exceeds the limit
-                    if (evt.newValue.Length > 1)
+                    if (evt.newValue.Length > maxLength-1)
                     {
-                        textField.value = evt.newValue.Substring(0, 1);
+                        textField.value = evt.newValue.Substring(0, maxLength-1);
                     }
                 });
             }
