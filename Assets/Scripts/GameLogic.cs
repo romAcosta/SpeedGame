@@ -19,9 +19,7 @@ public class GameLogic : MonoBehaviour
     [SerializeField] TMP_Text countdownText;
     [SerializeField] StateData stateData;
     //Middle Cards
-    private Stack<(int Rank, string Suit)> _leftMiddleDeck = new Stack<(int Rank, string Suit)>();
     private Stack<(int Rank, string Suit)> _leftMiddleStack = new Stack<(int Rank, string Suit)>();
-    private Stack<(int Rank, string Suit)> _rightMiddleDeck = new Stack<(int Rank, string Suit)>();
     private Stack<(int Rank, string Suit)> _rightMiddleStack = new Stack<(int Rank, string Suit)>();
     
     //Player Cards
@@ -182,23 +180,6 @@ public class GameLogic : MonoBehaviour
         return true;
     }
 
-    void FlipMiddleStacks()
-    {
-        _leftMiddleStack.Reverse();
-        _rightMiddleStack.Reverse();
-        for (int i = 0; i < _leftMiddleStack.Count; i++)
-        {
-            _leftMiddleDeck.Push(_leftMiddleStack.Pop());
-        }
-        for (int i = 0; i < _rightMiddleStack.Count; i++)
-        {
-            _leftMiddleDeck.Push(_leftMiddleStack.Pop());
-        }
-        
-        _leftMiddleStack.Clear();
-        _rightMiddleStack.Clear();
-    }
-
     #endregion
     
     #region Controls
@@ -265,7 +246,7 @@ public class GameLogic : MonoBehaviour
         {
             if (_leftMiddleStack.Count == 0)
             {
-                FlipMiddleStacks();
+                // todo flip animation
             }
             timer = 3f;
             countdownText.enabled = false;
@@ -314,8 +295,6 @@ public class GameLogic : MonoBehaviour
     
     #region Getters
 
-    public Stack<(int Rank, string Suit)> LeftMiddleDeck => _leftMiddleDeck;
-    public Stack<(int Rank, string Suit)> RightMiddleDeck => _rightMiddleDeck;
     public Stack<(int Rank, string Suit)> RightMiddleStack => _rightMiddleStack;
     public Stack<(int Rank, string Suit)> LeftMiddleStack => _leftMiddleStack;
     public Stack<(int Rank, string Suit)> PlayerStack => _playerStack;

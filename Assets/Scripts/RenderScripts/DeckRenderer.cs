@@ -16,16 +16,16 @@ public class DeckRenderer : MonoBehaviour
         switch (position)
         {
             case 1:
-                deck = gameLogic.PlayerStack;
+                //deck = gameLogic.PlayerStack;
                 break;
             case 2:
-                deck = gameLogic.OpponentStack;
+                //deck = gameLogic.OpponentStack;
                 break;
             case 3:
-                deck = gameLogic.LeftMiddleDeck;
+                //deck = gameLogic.LeftMiddleDeck;
                 break;
             case 4:
-                deck = gameLogic.RightMiddleDeck;
+                //deck = gameLogic.RightMiddleDeck;
                 break;
         }
     }
@@ -33,13 +33,14 @@ public class DeckRenderer : MonoBehaviour
     
     void Update()
     {
-        if (deck.Count > 0)
+        /*if (deck.Count > 0)
         {
             sr.sprite = sprite;
         }
         else
         {
             sr.sprite = null;
-        }
+        }*/
+        sr.sprite = sprite;
     }
 }
