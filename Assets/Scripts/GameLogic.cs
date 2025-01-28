@@ -230,8 +230,8 @@ public class GameLogic : MonoBehaviour
             Stack<(int Rank, string Suit)> currentStack = (left) ? _leftMiddleStack : _rightMiddleStack;
             var card = Card.FromTuple(currentHand[position]);
             Connections.MAIN.SendPacket(new PlayCardPacket(card, (byte) (left ? 0 : 1)));
-            currentHand[position] = (0, null);
             currentStack.Push(currentHand[position]);
+            currentHand[position] = (0, null);
             /*if (ValidatePlacement(currentHand[position], currentStack.Peek()))
             {
                 controlTimer = placeTime;
