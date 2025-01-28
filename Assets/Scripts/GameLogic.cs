@@ -98,6 +98,26 @@ public class GameLogic : MonoBehaviour
                 }
                 break;
 
+            case ClientboundPacketType.RejectCard:
+                {
+                    var p = (RejectCardPacket) packet;
+                    bool left = (p.ActionId & 1) == 0;
+                    var stack = left ? _leftMiddleStack : _rightMiddleStack;
+
+                    for (int i = 0; i < _playerHand.Length; i++)
+                    {
+                        if (_playerHand[i] == (0, null))
+                        {
+                            _playerHand[i] = stack.Pop();
+                            break;
+                        }
+                    }
+
+                    error = true;
+                    controlTimer = errorTime;
+                }
+                break;
+
             default:
                 Debug.LogError("Unexpected packet: " + packet);
                 break;
