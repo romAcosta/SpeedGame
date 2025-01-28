@@ -33,3 +33,18 @@ impl Card {
         return diff == 1 || diff == 12;
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_card_stackable_on() {
+        for rank in 0..=12 {
+            assert!(Card::stackable_on(
+                &Card(Suit::Spades, rank),
+                &Card(Suit::Spades, (rank + 1) % 13)
+            ));
+        }
+    }
+}
