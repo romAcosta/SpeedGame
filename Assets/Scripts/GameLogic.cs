@@ -46,7 +46,7 @@ public class GameLogic : MonoBehaviour
     void Start()
     {
         Connections.MAIN = new Connection();
-        StartCoroutine("NetworkingStart");
+        Connections.MAIN.OnOpen(NetworkingStart);
 
         Shuffle(_deck);
         SetCards();
@@ -54,8 +54,12 @@ public class GameLogic : MonoBehaviour
 
     async void NetworkingStart()
     {
-        await Connections.MAIN.Connect();
         await Connections.MAIN.SendPacket(new JoinQueuePacket());
+
+        Connections.TEMP = new Connection();
+        Connections.TEMP.OnOpen(() => {
+            Connections.TEMP.SendPacket(new JoinQueuePacket());
+        });
     }
 
     void FixedUpdate()

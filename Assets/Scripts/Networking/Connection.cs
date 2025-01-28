@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using UnityEngine;
 
 using NativeWebSocket;
@@ -14,11 +15,12 @@ public class Connection
     public Connection()
     {
         websocket.OnMessage += HandleMessage;
+        websocket.Connect();
     }
 
-    public async void Connect()
+    public void OnOpen(WebSocketOpenEventHandler fn)
     {
-        await websocket.Connect();
+        websocket.OnOpen += fn;
     }
 
     private void HandleMessage(byte[] data)
