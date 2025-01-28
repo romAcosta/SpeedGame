@@ -126,6 +126,8 @@ public class GameLogic : MonoBehaviour
                                 stateData.winnerNum = 2;
                                 SceneManager.LoadScene("Win");
                             }
+
+                            break;
                         }
                     }
                 }
