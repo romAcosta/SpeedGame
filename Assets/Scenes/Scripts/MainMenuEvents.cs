@@ -64,11 +64,9 @@ public class MainMenuEvents : MonoBehaviour
             if (keysLeft[i].value != null || !keyCodesLeft.Contains((KeyCode)Enum.Parse(typeof(KeyCode), keysLeft[i].value, true)))
             {
                 System.Enum.TryParse(keysLeft[i].value, true, out KeyCode key);keyCodesLeft[i] = key;
-                Debug.Log(key);
             }
             if (keysRight[i].value != null || !keyCodesRight.Contains((KeyCode)Enum.Parse(typeof(KeyCode), keysRight[i].value, true))){
                 System.Enum.TryParse(keysRight[i].value, true, out KeyCode key);
-                Debug.Log(key);
                 keyCodesRight[i] = key;
             }
         }
@@ -177,7 +175,6 @@ public class MainMenuEvents : MonoBehaviour
             {
                 textField.RegisterValueChangedCallback(evt =>
                 {
-                    // Trim the value to 1 character if it exceeds the limit
                     if (evt.newValue.Length > 1)
                     {
                         textField.value = evt.newValue.Substring(0, 1);
