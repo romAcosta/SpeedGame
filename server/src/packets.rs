@@ -75,6 +75,7 @@ pub enum ClientboundPacket {
     RejectCard { action_id: u8 },
     Inactivity { level: InactivityLevel },
     DrawCard { card: Card },
+    RemoveCard,
 }
 
 impl ClientboundPacket {
@@ -89,6 +90,7 @@ impl ClientboundPacket {
             RejectCard { .. } => 5,
             Inactivity { .. } => 6,
             DrawCard { .. } => 7,
+            RemoveCard => 8,
         }
     }
 
@@ -107,6 +109,7 @@ impl ClientboundPacket {
             RejectCard { action_id } => result.push(*action_id),
             Inactivity { level } => result.push(*level as u8),
             DrawCard { card } => result.push(card.serialize()),
+            RemoveCard => {}
         }
 
         result

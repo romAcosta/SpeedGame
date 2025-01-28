@@ -145,16 +145,19 @@ impl Game {
                     "Player played card successfully"
                 );
 
-                other_player
-                    .send(ClientboundPacket::PlayCard { card, action_id })
-                    .await;
+                if let Some(drawn_card) = deck.pop() {
+                    other_player
+                        .send(ClientboundPacket::PlayCard { card, action_id })
+                        .await;
 
-                let drawn_card = deck.pop().unwrap();
-                player
-                    .send(ClientboundPacket::DrawCard { card: drawn_card })
-                    .await;
+                    player
+                        .send(ClientboundPacket::DrawCard { card: drawn_card })
+                        .await;
 
-                hand.push(drawn_card);
+                    hand.push(drawn_card);
+                } else {
+                    other_play.send(ClientboundPacket::RemoveCard);
+                }
             }
             _ => return false,
         }

@@ -16,7 +16,8 @@ public enum ClientboundPacketType : byte
     PlayCard = 4,
     RejectCard = 5,
     Inactivity = 6,
-    DrawCard = 7
+    DrawCard = 7,
+    RemoveCard = 8,
 }
 
 public abstract class ServerboundPacket
@@ -96,6 +97,7 @@ public abstract class ClientboundPacket
             ClientboundPacketType.RejectCard => new RejectCardPacket(payload),
             ClientboundPacketType.Inactivity => new InactivityPacket(payload),
             ClientboundPacketType.DrawCard => new DrawCardPacket(payload),
+            ClientboundPacketType.RemoveCard => new RemoveCardPacket(),
             _ => null
         };
     }
@@ -195,4 +197,9 @@ public class DrawCardPacket : ClientboundPacket
     {
         Card = Card.Deserialize(payload[0]);
     }
+}
+
+public class RemoveCardPacket : ClientboundPacket
+{
+    public override ClientboundPacketType Type => ClientboundPacketType.RemoveCard;
 }

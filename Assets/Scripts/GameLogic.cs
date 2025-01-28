@@ -127,6 +127,23 @@ public class GameLogic : MonoBehaviour
                 }
                 break;
 
+            case ClientboundPacketType.RemoveCard:
+                {
+                    for (int i = 0; i < _opponentHand.Length; i++)
+                    {
+                        if (_opponentHand[i])
+                        {
+                            _opponentHand[i] = false;
+
+                            if (i == _opponentHand.Length - 1)
+                            {
+                                stateData.winnerNum = 2;
+                                SceneManager.LoadScene("Win");
+                            }
+                        }
+                    }
+                }
+
             default:
                 Debug.LogError("Unexpected packet: " + packet);
                 break;
