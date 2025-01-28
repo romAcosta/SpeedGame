@@ -81,6 +81,8 @@ public class GameLogic : MonoBehaviour
                     var p = (FlipCenterPacket) packet;
                     _leftMiddleStack.Push(p.CardA.ToTuple());
                     _rightMiddleStack.Push(p.CardB.ToTuple());
+                    timer = 5;
+                    go = true;
                 }
                 break;
 
