@@ -45,6 +45,12 @@ impl Connection {
             tokio::select! {
                 Some(maybe_msg) = conn.next() => {
                     let msg = maybe_msg?;
+
+                    if let Message::Ping(b) = msg {
+                        let _ = conn.send(Message::Pong(b));
+                        continue
+                    }
+
                     debug!(?msg, "Received websocket message");
 
                     let packet = Self::parse_packet(msg).await?;
