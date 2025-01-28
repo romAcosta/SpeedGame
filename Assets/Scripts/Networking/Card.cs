@@ -36,4 +36,14 @@ public class Card
         var diff = Math.Abs((int)Rank - (int)other.Rank);
         return diff == 1 || diff == 12;
     }
+
+    public (int, string) ToTuple()
+    {
+        return (Rank + 1, Suit.ToString().Substring(0, 1));
+    }
+
+    public override string ToString()
+    {
+        return (Rank + 1) + " of " + Suit;
+    }
 }

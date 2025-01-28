@@ -49,7 +49,6 @@ public class GameLogic : MonoBehaviour
         Connections.MAIN.OnOpen(NetworkingStart);
 
         Shuffle(_deck);
-        SetCards();
     }
 
     async void NetworkingStart()
@@ -67,6 +66,14 @@ public class GameLogic : MonoBehaviour
     {
         switch (packet.Type)
         {
+            case ClientboundPacketType.Setup:
+                var p = (SetupPacket) packet;
+                foreach (Card card in p.Hand)
+                {
+                    _playerStack.Push(card.ToTuple());
+                }
+                break;
+
             default:
                 Debug.LogError("Unexpected packet: " + packet);
                 break;
@@ -122,7 +129,7 @@ public class GameLogic : MonoBehaviour
             }
         }
 
-        if (!playerHandFull && _playerStack.Count == 0)
+        /*if (!playerHandFull && _playerStack.Count == 0)
         {
             stateData.winnerNum = 1;
             SceneManager.LoadScene("Win");
@@ -132,7 +139,7 @@ public class GameLogic : MonoBehaviour
         {
             stateData.winnerNum = 2;
             SceneManager.LoadScene("Win");
-        }
+        }*/
         
     }
 
@@ -263,26 +270,6 @@ public class GameLogic : MonoBehaviour
             cards--;
             int k = random.Next(cards + 1);
             (list[k], list[cards]) = (list[cards], list[k]); 
-        }
-    }
-
-    void SetCards()
-    {
-        bool left = false;
-        for (int i = 0; i < _deck.Count; i++)
-        {
-            if (left)
-            {
-                if (i < 10) _leftMiddleDeck.Push((_deck[i]));
-                else _playerStack.Push(_deck[i]);
-                left = false;
-            }
-            else
-            {
-                if (i < 10) _rightMiddleDeck.Push(_deck[i]);
-                else _opponentStack.Push(_deck[i]);
-                left = true;
-            }
         }
     }
 
