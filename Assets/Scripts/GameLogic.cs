@@ -40,10 +40,13 @@ public class GameLogic : MonoBehaviour
         Connections.MAIN.SendPacket(new JoinQueuePacket());
         Connections.MAIN.OnPacketReceived += OnPacket;
 
-        Connections.TEMP = new Connection();
-        Connections.TEMP.OnOpen(() => {
-            Connections.TEMP.SendPacket(new JoinQueuePacket());
-        });
+        if (Application.isEditor)
+        {
+            Connections.TEMP = new Connection();
+            Connections.TEMP.OnOpen(() => {
+                Connections.TEMP.SendPacket(new JoinQueuePacket());
+            });
+        }
     }
 
     void OnPacket(ClientboundPacket packet)
@@ -137,7 +140,10 @@ public class GameLogic : MonoBehaviour
     void Update()
     {
         Connections.MAIN.Update();
-        Connections.TEMP.Update();
+        if (Application.isEditor)
+        {
+            Connections.TEMP.Update();
+        }
     }
 
     void FixedUpdate()
