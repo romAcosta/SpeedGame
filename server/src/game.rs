@@ -70,7 +70,7 @@ impl Game {
         self.flip_center().await;
 
         loop {
-            if self.no_more_moves().await {
+            while self.no_more_moves().await {
                 self.flip_center().await;
             }
 
