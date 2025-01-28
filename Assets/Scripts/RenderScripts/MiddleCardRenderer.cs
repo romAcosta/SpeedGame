@@ -16,9 +16,10 @@ public class MiddleCardRenderer : MonoBehaviour
     }
     
     void Update()
-    {
-        if (gameLogic.LeftMiddleStack.Count !> 0)
+    {   
+        if (gameLogic.LeftMiddleStack.Count != 0)
         {
+            Debug.Log("test");
             if (GetCard() != _lastCard)
             {
                 ChangeSprite();

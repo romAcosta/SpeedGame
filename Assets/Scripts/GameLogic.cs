@@ -73,6 +73,10 @@ public class GameLogic : MonoBehaviour
 
     void LateUpdate()
     {
+        foreach ((int Rank, string Suit) card in _playerHand)
+        {
+            Debug.Log(card.Rank + ":" + card.Suit);
+        }
         //LookForWinner();
     }
 
@@ -131,12 +135,11 @@ public class GameLogic : MonoBehaviour
 
     public void FlipMiddleStacks(byte left, byte right)
     {       
-            (int rank, string suit)rightStack = CardTranslator.DecodeCard(right);
-            (int rank, string suit)leftStack = CardTranslator.DecodeCard(left);
-            Debug.Log("Successfull Card Recieved:" + rightStack.rank + " of " + rightStack.suit);
-            Debug.Log("Successfull Card Recieved:" + leftStack.rank + " of " + leftStack.suit);
-            _leftMiddleDeck.Push(leftStack);
-            _leftMiddleStack.Push(rightStack);
+            (int rank, string suit)rightStack = DecodeCard(right);
+            (int rank, string suit)leftStack = DecodeCard(left);
+            _leftMiddleStack.Push(leftStack);          
+             Debug.Log(_leftMiddleStack.Peek());
+            _rightMiddleStack.Push(rightStack);
             
     }
     
@@ -232,17 +235,14 @@ public class GameLogic : MonoBehaviour
     }
     */
     public void DrawCard(byte Card){
-        Debug.Log("Card Recieved " + Card);
            for (int i = 0; i < _playerHand.Length; i++)
             {
-                if (_playerHand[i] == (0, null))
-                {
-                    _playerHand[i] = CardTranslator.DecodeCard(Card);
-                    Debug.Log("Successfull Card Recieved:" + _playerHand[i].Rank + " of " + _playerHand[i].Suit);
+                if (_playerHand[i] == (0, null)){
+                    this._playerHand[i] = DecodeCard(Card);
+                    Debug.Log("Successfull Card Recieved:" + _playerHand[i].Rank + ":" + _playerHand[i].Suit);
                     break;
                 }
             }
-        
     }
     void DrawCards()
     {
@@ -264,7 +264,23 @@ public class GameLogic : MonoBehaviour
     }
 
     #endregion
-    
+     public (int Rank, string Suit) DecodeCard(byte card){
+        //Debug.Log("Value:" + card);
+        // Convert.ToInt16(newCard.Substring(2,4), 2)
+        // DecodeSuit(Convert.ToInt16(newCard.Substring(0, 2), 2))
+        return (card >> 2, DecodeSuit(card & 0b11));
+    }
+    private  string DecodeSuit(int suitValue)
+    {
+        return suitValue switch
+        {
+            0 => "H",  // Hearts
+            1 => "D",  // Diamonds
+            2 => "S",  // Spades
+            3 => "C",  // Clubs
+            _ => null
+        };
+    }
     #region Getters
 
     public Stack<(int Rank, string Suit)> LeftMiddleDeck => _leftMiddleDeck;
