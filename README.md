@@ -19,7 +19,8 @@ A recreation of the card game _Speed_ in Unity powered by a Rust multiplayer ser
 2. Run Unity project
 
 -   Follow the [Unity WebSocket Installation Instructions](https://github.com/endel/NativeWebSocket?tab=readme-ov-file#installation)
--   Run the card game scene
+-   Build the card game scene to an executable
+-   Run at least two instances, and watch the game start!
 
 ## Acknolwedgements
 
