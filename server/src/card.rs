@@ -43,8 +43,20 @@ mod tests {
         for rank in 0..=12 {
             assert!(Card::stackable_on(
                 &Card(Suit::Spades, rank),
-                &Card(Suit::Spades, (rank + 1) % 13)
+                &Card(Suit::Hearts, (rank + 1) % 13)
             ));
+        }
+    }
+
+    #[test]
+    fn test_card_serialize_deserialize() {
+        for suit in Suit::VALUES {
+            for rank in Card::RANK_RANGE {
+                let card = Card(suit, rank);
+                let serialized = card.serialize();
+                let deserialized = Card::deserialize(serialized).unwrap();
+                assert_eq!(card, deserialized);
+            }
         }
     }
 }
